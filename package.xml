@@ -4,7 +4,7 @@
   <description>
   Final project package
   </description>
-  <maintainer email="sarahsebo@uchicago.edu">Sarah Sebo</maintainer>
+  <maintainer email="blagga@uchicago.edu">Raxelbots</maintainer>
   <license>MIT</license>
 
   <export>
@@ -13,7 +13,7 @@
           the package.xml file. You can than use URIs of type model://my_package/stuff. -->
       <gazebo_ros                                                                 
           gazebo_plugin_path="${prefix}/lib"
-          gazebo_model_path="${prefix}/.." /> 
+          gazebo_model_path="${prefix}/.." />
   </export>
 
   <buildtool_depend>catkin</buildtool_depend>
@@ -31,5 +31,5 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>message_runtime</exec_depend>
-  
+
 </package>
