@@ -11,7 +11,7 @@ class RobotMovement(object):
         rospy.init_node("robot_movement")
         self.initialized = False
 
-        self.cmd_vel_pub = rospy.Publisher('/tb3_0/cmd_vel', Twist, queue_size=10)
+        self.cmd_vel_pub = rospy.Publisher('/sydney_bot/cmd_vel', Twist, queue_size=10)
 
         self.init_gazebo()
 

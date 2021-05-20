@@ -1,37 +1,38 @@
 <launch>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [waffle_pi]"/>
-  <arg name="first_tb3"  default="tb3_0"/>
-  <arg name="second_tb3" default="tb3_1"/>
-  <arg name="third_tb3"  default="tb3_2"/>
-  <arg name="predator"   default="predator"/>
+  <arg name="sydney_bot"  default="sydney_bot"/>
+  <arg name="alec_bot" default="alec_bot"/>
+  <arg name="rachel_bot"  default="rachel_bot"/>
+  <arg name="kir_bot"   default="kir_bot"/>
 
-  <arg name="first_tb3_x_pos" default="1.0"/>
-  <arg name="first_tb3_y_pos" default="0.0"/>
-  <arg name="first_tb3_z_pos" default="0.0"/>
-  <arg name="first_tb3_yaw"   default="0.0"/>
+  <arg name="sydney_bot_x_pos" default="0.0"/>
+  <arg name="sydney_bot_y_pos" default="0.0"/>
+  <arg name="sydney_bot_z_pos" default="0.0"/>
+  <arg name="sydney_bot_yaw"   default="0.0"/>
 
-  <arg name="second_tb3_x_pos" default="0.0"/>
-  <arg name="second_tb3_y_pos" default="0.0"/>
-  <arg name="second_tb3_z_pos" default="0.0"/>
-  <arg name="second_tb3_yaw"   default="0.0"/>
+  <arg name="alec_bot_x_pos" default="0.0"/>
+  <arg name="alec_bot_y_pos" default="-1.0"/>
+  <arg name="alec_bot_z_pos" default="0.0"/>
+  <arg name="alec_bot_yaw"   default="0.0"/>
 
-  <arg name="third_tb3_x_pos" default="-1.0"/>
-  <arg name="third_tb3_y_pos" default="0.0"/>
-  <arg name="third_tb3_z_pos" default="0.0"/>
-  <arg name="third_tb3_yaw"   default="0.0"/>
+  <arg name="rachel_bot_x_pos" default="0.0"/>
+  <arg name="rachel_bot_y_pos" default="-2.0"/>
+  <arg name="rachel_bot_z_pos" default="0.0"/>
+  <arg name="rachel_bot_yaw"   default="0.0"/>
 
-  <arg name="predator_x_pos" default="0.0"/>
-  <arg name="predator_y_pos" default="-1.0"/>
-  <arg name="predator_z_pos" default="0.0"/>
-  <arg name="predator_yaw"   default="0.0"/>
+  <arg name="kir_bot_x_pos" default="1.0"/>
+  <arg name="kir_bot_y_pos" default="-1.0"/>
+  <arg name="kir_bot_z_pos" default="0.0"/>
+  <arg name="kir_bot_yaw"   default="0.0"/>
 
-  <arg name="color1" default="Gazebo/Green"/>
-  <arg name="color2" default="Gazebo/Blue"/>
-  <arg name="color3" default="Gazebo/Indigo"/>
-  <arg name="color_predator" default="Gazebo/Red"/>
+  <arg name="color_sydney_bot" default="Gazebo/Green"/>
+  <arg name="color_alec_bot" default="Gazebo/Blue"/>
+  <arg name="color_rachel_bot" default="Gazebo/Indigo"/>
+  <arg name="color_kir_bot" default="Gazebo/Red"/>
 
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find final_project)/worlds/enclosed_area_3.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>
@@ -39,48 +40,48 @@
     <arg name="debug" value="false"/>
   </include>
 
-  <group ns = "$(arg first_tb3)">
-    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color1)" />
+  <group ns = "$(arg sydney_bot)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color_sydney_bot)" />
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
       <param name="publish_frequency" type="double" value="50.0" />
-      <param name="tf_prefix" value="$(arg first_tb3)" />
+      <param name="tf_prefix" value="$(arg sydney_bot)" />
     </node>
 
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg first_tb3) -x $(arg first_tb3_x_pos) -y $(arg first_tb3_y_pos) -z $(arg first_tb3_z_pos) -Y $(arg first_tb3_yaw) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg sydney_bot) -x $(arg sydney_bot_x_pos) -y $(arg sydney_bot_y_pos) -z $(arg sydney_bot_z_pos) -Y $(arg sydney_bot_yaw) -param robot_description" />
   </group>
 
-  <group ns = "$(arg second_tb3)">
-    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color2)" />
+  <group ns = "$(arg alec_bot)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color_alec_bot)" />
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
       <param name="publish_frequency" type="double" value="50.0" />
-      <param name="tf_prefix" value="$(arg second_tb3)" />
+      <param name="tf_prefix" value="$(arg alec_bot)" />
     </node>
 
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg second_tb3) -x $(arg second_tb3_x_pos) -y $(arg second_tb3_y_pos) -z $(arg second_tb3_z_pos) -Y $(arg second_tb3_yaw) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg alec_bot) -x $(arg alec_bot_x_pos) -y $(arg alec_bot_y_pos) -z $(arg alec_bot_z_pos) -Y $(arg alec_bot_yaw) -param robot_description" />
   </group>
 
-  <group ns = "$(arg third_tb3)">
-    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color3)" />
+  <group ns = "$(arg rachel_bot)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color_rachel_bot)" />
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
       <param name="publish_frequency" type="double" value="50.0" />
-      <param name="tf_prefix" value="$(arg third_tb3)" />
+      <param name="tf_prefix" value="$(arg rachel_bot)" />
     </node>
 
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg third_tb3) -x $(arg third_tb3_x_pos) -y $(arg third_tb3_y_pos) -z $(arg third_tb3_z_pos) -Y $(arg third_tb3_yaw) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg rachel_bot) -x $(arg rachel_bot_x_pos) -y $(arg rachel_bot_y_pos) -z $(arg rachel_bot_z_pos) -Y $(arg rachel_bot_yaw) -param robot_description" />
   </group>
 
-  <group ns = "$(arg predator)">
-    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color_predator)" />
+  <group ns = "$(arg kir_bot)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find final_project)/urdf/turtlebot3_$(arg model).urdf.xacro' color:=$(arg color_kir_bot)" />
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
       <param name="publish_frequency" type="double" value="50.0" />
-      <param name="tf_prefix" value="$(arg predator)" />
+      <param name="tf_prefix" value="$(arg kir_bot)" />
     </node>
 
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg predator) -x $(arg predator_x_pos) -y $(arg predator_y_pos) -z $(arg predator_z_pos) -Y $(arg predator_yaw) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg kir_bot) -x $(arg kir_bot_x_pos) -y $(arg kir_bot_y_pos) -z $(arg kir_bot_z_pos) -Y $(arg kir_bot_yaw) -param robot_description" />
   </group>
 
 </launch>
