@@ -5,22 +5,28 @@ from geometry_msgs.msg import Twist, Vector3
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ODEPhysics
 from gazebo_msgs.srv import SetPhysicsProperties
+from alec_bot import AlecBot
+from sydney_bot import SydneyBot
+from rachel_bot import RachelBot
 
 class RobotMovement(object):
     def __init__(self):
-        rospy.init_node("robot_movement")
+
         self.initialized = False
 
-        self.cmd_vel_pub = rospy.Publisher('/sydney_bot/cmd_vel', Twist, queue_size=10)
+        rospy.init_node("robot_movement")
 
         self.init_gazebo()
 
         rospy.sleep(2)
 
+        # run prey movement
+        self.alec_bot = AlecBot()
+        self.sydney_bot = SydneyBot()
+        self.rachel_bot = RachelBot()
+
         print("Initialized")
         self.initialized = True
-
-        self.set_v(0.5, 0.5)
 
         rospy.sleep(60)
         self.reset()
@@ -48,15 +54,6 @@ class RobotMovement(object):
         gravity = Vector3(0.0, 0.0, -9.8)
 
         set_physics_props(0.002, 0.0, gravity, ode_config)
-
-
-    def set_v(self, velocity, angular_velocity):
-        """ The current velocity and angular velocity of the robot are set here
-        """
-        v1 = Vector3(velocity, 0.0, 0.0)
-        v2 = Vector3(0.0, 0.0, angular_velocity)
-        t = Twist(v1, v2)
-        self.cmd_vel_pub.publish(t)
 
 
     def run(self):
