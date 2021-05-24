@@ -8,6 +8,7 @@ from gazebo_msgs.srv import SetPhysicsProperties
 from alec_bot import AlecBot
 from sydney_bot import SydneyBot
 from rachel_bot import RachelBot
+from kir_bot import KirBot
 
 class RobotMovement(object):
     def __init__(self):
@@ -24,6 +25,7 @@ class RobotMovement(object):
         self.alec_bot = AlecBot()
         self.sydney_bot = SydneyBot()
         self.rachel_bot = RachelBot()
+        self.kir_bot = KirBot()
 
         print("Initialized")
         self.initialized = True
@@ -53,7 +55,7 @@ class RobotMovement(object):
         ode_config.max_contacts = 20
         gravity = Vector3(0.0, 0.0, -9.8)
 
-        set_physics_props(0.002, 0.0, gravity, ode_config)
+        set_physics_props(0.001, 1000.0, gravity, ode_config)
 
 
     def run(self):
