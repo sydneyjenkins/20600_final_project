@@ -2,28 +2,31 @@
 
 import rospy, cv2, cv_bridge, numpy, math
 from sensor_msgs.msg import Image, LaserScan
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Vector3
+from bot import Bot
 
-class SydneyBot(object):
+class SydneyBot(Bot):
 
-    def __init__(self, DEBUG=False):
+    def __init__(self, odom_positions, DEBUG=False):
+        self.name = "sydney_bot"
+        super().__init__(self.name, odom_positions)
 
         self.initialized = False
 
         self.DEBUG = DEBUG
 
-        if DEBUG:
-            rospy.init_node("sydney_bot")
+        if self.DEBUG:
+            rospy.init_node(self.name)
 
         # subscribe to the robot's RGB camera data stream
-        self.image_sub = rospy.Subscriber('/sydney_bot/camera/rgb/image_raw',
+        self.image_sub = rospy.Subscriber(f'/{self.name}/camera/rgb/image_raw',
                 Image, self.image_callback)
 
         # subscribe to the robot's scan topic
-        rospy.Subscriber("/sydney_bot/scan", LaserScan, self.process_scan)
+        rospy.Subscriber(f"/{self.name}/scan", LaserScan, self.process_scan)
 
         # set up publisher and Twist to publish to /cmd_vel
-        self.cmd_vel_pub = rospy.Publisher('/sydney_bot/cmd_vel', Twist, queue_size=10)
+        self.cmd_vel_pub = rospy.Publisher(f'/{self.name}/cmd_vel', Twist, queue_size=10)
         self.twist = Twist()
 
         # set up ROS / cv bridge

@@ -4,10 +4,12 @@ import rospy, cv2, cv_bridge, numpy, math
 from sensor_msgs.msg import Image, LaserScan
 from geometry_msgs.msg import Twist, Vector3
 import numpy as np
+from bot import Bot
 
-class KirBot(object):
+class KirBot(Bot):
 
-    def __init__(self, DEBUG=False):
+    def __init__(self, odom_positions, handle_odom_positions, DEBUG=False):
+        super().__init__("kir_bot", odom_positions, handle_odom_positions)
 
         self.initialized = False
 
