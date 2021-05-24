@@ -36,9 +36,9 @@ class KirBot(Bot):
 
         self.params = {
             "prey_weight": 1, # points straight towards nearest prey
-            "parallel_weight": 1, # points parallel to nearest obstacle
+            "parallel_weight": 0, # points parallel to nearest obstacle
             # "max_parallel_drive_scaled_weight": 0,
-            "away_weight": 1, # points straight away from nearest obstacle
+            "away_weight": 0, # points straight away from nearest obstacle
             # "explore_weight": 0, # vector pointing to unexplored areas based on odom
 
             "min_turn_only_angle": 1.2,
@@ -130,6 +130,8 @@ class KirBot(Bot):
     def image_callback(self, msg):
         if not self.initialized:
             return
+        
+        self.prey_angle = math.pi * 0.5
 
         image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)

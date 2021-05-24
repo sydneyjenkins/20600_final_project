@@ -9,6 +9,7 @@ from alec_bot import AlecBot
 from sydney_bot import SydneyBot
 from rachel_bot import RachelBot
 from kir_bot import KirBot
+from predator_catch import PredatorCatch
 
 class RobotMovement(object):
     def __init__(self):
@@ -21,6 +22,8 @@ class RobotMovement(object):
 
         rospy.sleep(2)
 
+        self.reset_world()
+
         self.odom_positions = {}
 
         # run prey movement
@@ -28,6 +31,8 @@ class RobotMovement(object):
         self.sydney_bot = SydneyBot(self.odom_positions)
         self.rachel_bot = RachelBot(self.odom_positions)
         self.kir_bot = KirBot(self.odom_positions, self.handle_odom_positions)
+
+        PredatorCatch()
 
         print("Initialized")
         self.initialized = True

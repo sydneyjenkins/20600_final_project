@@ -13,7 +13,7 @@ class Bot(object):
         self.odom_positions = odom_positions
         self.handle_odom_positions = handle_odom_positions
 
-        rospy.Subscriber(f'/{self.name}/odom', Odometry, self.process_odom)
+        # rospy.Subscriber(f'/{self.name}/odom', Odometry, self.process_odom)
 
     def process_odom(self, odom):
         x = odom.pose.pose.position.x
