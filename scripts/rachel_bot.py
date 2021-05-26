@@ -29,6 +29,8 @@ class RachelBot(object):
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
 
+        self.sees_predator = False
+
         self.initialized = True
 
 
@@ -42,13 +44,62 @@ class RachelBot(object):
 
 
     def process_scan(self, data):
-        self.twist.linear.x = 0.1
-        self.cmd_vel_pub.publish(self.twist)
-        return
+
+        if self.sees_predator:
+            # use minimum distance to nearest object to avoid obstacles,
+            # walls, or other robots
+            min_dist = min(data.ranges)
+            min_angl = data.ranges.index(min_dist)
+
+            # initialize angular velocity to 0
+            v = 0
+
+            # PID control to avoid obstacles
+            if min_angl < 180:
+                v = 0.01 * (min_angl - 90)
+                if abs(v) > 0.5:
+                    v = v * 0.5
+            else:
+                v = 0.01 * (min_angl - 270)
+                if abs(v) > 0.5:
+                    v = v * 0.5
+
+            if self.DEBUG:
+                print(min_angl, v)
+
+            self.twist.linear.x = -0.2
+            self.twist.angular.z = v
+            self.cmd_vel_pub.publish(self.twist)
+        else:
+            # doesn't see predator, so no linear velocity
+            self.twist.linear.x = 0.0
+            self.cmd_vel_pub.publish(self.twist)
 
 
     def image_callback(self, data):
-        return
+
+        if (not self.initialized):
+            return
+
+        # converts the incoming ROS message to cv2 format and HSV (hue, saturation, value)
+        image = self.bridge.imgmsg_to_cv2(data, desired_encoding='bgr8')
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # looking for red color, i.e. predator bot
+        mask1 = cv2.inRange(hsv, (0,50,20), (5,255,255))
+        mask2 = cv2.inRange(hsv, (175,50,20), (180,255,255))
+        mask = cv2.bitwise_or(mask1, mask2)
+
+        M = cv2.moments(mask)
+
+        if M['m00'] > 0:
+            # color/predator has been detected
+            self.sees_predator = True
+        else:
+            # since predator not detected, spin until it is detected
+            self.sees_predator = False
+            self.twist.angular.z = 0.2
+            self.cmd_vel_pub.publish(self.twist)
 
 
     def run(self):
