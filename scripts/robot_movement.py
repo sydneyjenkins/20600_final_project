@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
+
 from geometry_msgs.msg import Twist, Vector3
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ODEPhysics
@@ -13,7 +14,6 @@ from predator_catch import PredatorCatch
 
 class RobotMovement(object):
     def __init__(self):
-
         self.initialized = False
 
         rospy.init_node("robot_movement")
@@ -32,7 +32,7 @@ class RobotMovement(object):
         self.rachel_bot = RachelBot(self.odom_positions)
         self.kir_bot = KirBot(self.odom_positions, self.handle_odom_positions)
 
-        PredatorCatch()
+        PredatorCatch(self.reset_world)
 
         print("Initialized")
         self.initialized = True
