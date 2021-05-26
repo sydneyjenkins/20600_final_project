@@ -8,6 +8,8 @@ from gazebo_msgs.srv import SetPhysicsProperties
 from alec_bot import AlecBot
 from sydney_bot import SydneyBot
 from rachel_bot import RachelBot
+from kir_bot import KirBot
+from predator_catch import PredatorCatch
 
 class RobotMovement(object):
     def __init__(self):
@@ -20,22 +22,29 @@ class RobotMovement(object):
 
         rospy.sleep(2)
 
+        self.reset_world()
+
+        self.odom_positions = {}
+
         # run prey movement
-        self.alec_bot = AlecBot()
-        self.sydney_bot = SydneyBot()
-        self.rachel_bot = RachelBot()
+        self.alec_bot = AlecBot(self.odom_positions)
+        self.sydney_bot = SydneyBot(self.odom_positions)
+        self.rachel_bot = RachelBot(self.odom_positions)
+        self.kir_bot = KirBot(self.odom_positions, self.handle_odom_positions)
+
+        PredatorCatch()
 
         print("Initialized")
         self.initialized = True
 
         rospy.sleep(60)
-        self.reset()
+        self.reset_world()
         print("Reset")
 
 
     def init_gazebo(self):
         rospy.wait_for_service('/gazebo/reset_world')
-        self.reset = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+        self.reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
         rospy.wait_for_service('/gazebo/set_physics_properties')
         set_physics_props = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
@@ -53,7 +62,15 @@ class RobotMovement(object):
         ode_config.max_contacts = 20
         gravity = Vector3(0.0, 0.0, -9.8)
 
-        set_physics_props(0.002, 0.0, gravity, ode_config)
+        set_physics_props(0.001, 1000.0, gravity, ode_config)
+
+
+    def handle_odom_positions(self):
+        # reset the world if either 60s has passed or the predator is within a certain
+        # range of a prey bot
+
+        # print(self.odom_positions)
+        return
 
 
     def run(self):
