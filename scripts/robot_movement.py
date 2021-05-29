@@ -32,19 +32,15 @@ class RobotMovement(object):
         self.rachel_bot = RachelBot(self.odom_positions)
         self.kir_bot = KirBot(self.odom_positions, self.handle_odom_positions)
 
-        PredatorCatch(self.reset_world)
+        self.predator_catch = PredatorCatch(self.reset_world)
 
         print("Initialized")
         self.initialized = True
 
-        rospy.sleep(60)
-        self.reset_world()
-        print("Reset")
-
 
     def init_gazebo(self):
         rospy.wait_for_service('/gazebo/reset_world')
-        self.reset_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
+        self.reset_gazebo_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
         rospy.wait_for_service('/gazebo/set_physics_properties')
         set_physics_props = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
@@ -62,7 +58,7 @@ class RobotMovement(object):
         ode_config.max_contacts = 20
         gravity = Vector3(0.0, 0.0, -9.8)
 
-        set_physics_props(0.001, 1000.0, gravity, ode_config)
+        set_physics_props(0.001, 0.0, gravity, ode_config)
 
 
     def handle_odom_positions(self):
@@ -71,6 +67,10 @@ class RobotMovement(object):
 
         # print(self.odom_positions)
         return
+
+
+    def reset_world(self):
+        self.reset_gazebo_world()
 
 
     def run(self):
