@@ -18,6 +18,8 @@ class RobotMovement(object):
 
         rospy.init_node("robot_movement")
 
+        self.default_physics = False
+
         self.init_gazebo()
 
         rospy.sleep(2)
@@ -30,9 +32,10 @@ class RobotMovement(object):
         self.alec_bot = AlecBot(self.odom_positions)
         self.sydney_bot = SydneyBot(self.odom_positions)
         self.rachel_bot = RachelBot(self.odom_positions)
-        self.kir_bot = KirBot(self.odom_positions, self.handle_odom_positions)
 
         self.predator_catch = PredatorCatch(self.reset_world)
+
+        self.kir_bot = KirBot(self.odom_positions, self.predator_catch.get_odom_poses)
 
         print("Initialized")
         self.initialized = True
@@ -58,15 +61,11 @@ class RobotMovement(object):
         ode_config.max_contacts = 20
         gravity = Vector3(0.0, 0.0, -9.8)
 
-        set_physics_props(0.001, 0.0, gravity, ode_config)
-
-
-    def handle_odom_positions(self):
-        # reset the world if either 60s has passed or the predator is within a certain
-        # range of a prey bot
-
-        # print(self.odom_positions)
-        return
+        time_step = 0.001
+        max_update_rate = 0.0
+        if self.default_physics:
+            max_update_rate = 1000.0
+        set_physics_props(time_step, max_update_rate, gravity, ode_config)
 
 
     def reset_world(self):
