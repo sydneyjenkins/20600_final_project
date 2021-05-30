@@ -65,9 +65,10 @@ class RobotMovement(object):
         ode_config.max_contacts = 20
         gravity = Vector3(0.0, 0.0, -9.8)
 
-        time_step = 0.001
+        time_step = 0.0015
         max_update_rate = 0.0
         if self.default_physics:
+            time_step = 0.001
             max_update_rate = 1000.0
         self.set_gazebo_physics_props(time_step, max_update_rate, gravity, ode_config)
 

@@ -45,7 +45,7 @@ class AlecBot(Bot):
 
 
     def process_scan(self, data):
-        self.twist.angular.z = 0.1
+        self.twist.angular.z = 0.2
         self.cmd_vel_pub.publish(self.twist)
         return
 

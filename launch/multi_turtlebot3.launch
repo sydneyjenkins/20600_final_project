@@ -27,7 +27,7 @@
 
   <arg name="color_sydney_bot" default="Gazebo/Green"/>
   <arg name="color_alec_bot" default="Gazebo/Blue"/>
-  <arg name="color_rachel_bot" default="Gazebo/Indigo"/>
+  <arg name="color_rachel_bot" default="Gazebo/Yellow"/>
   <arg name="color_kir_bot" default="Gazebo/Red"/>
 
 

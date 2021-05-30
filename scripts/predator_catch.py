@@ -5,6 +5,7 @@ import rospy
 from geometry_msgs.msg import Twist, Pose
 from gazebo_msgs.msg import ModelStates
 from gazebo_msgs.srv import DeleteModel, SpawnModel
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 import math
 
@@ -86,20 +87,49 @@ class PredatorCatch(object):
         return name == "rachel_bot" or name == "alec_bot" or name == "sydney_bot"
 
 
+    def get_yaw_from_pose(self, p):
+
+        yaw = (euler_from_quaternion([
+                p.orientation.x,
+                p.orientation.y,
+                p.orientation.z,
+                p.orientation.w])
+                [2])
+        return yaw
+
+
+    def actual_pose(self, p, log=False):
+        x = p.position.x
+        y = p.position.y
+        yaw = self.get_yaw_from_pose(p)
+        l = .06
+        dx = l * math.cos(yaw)
+        dy = l * math.sin(yaw)
+        if log:
+            print(dx, dy)
+
+        return x - dx, y - dy
+
+
     def handle_capture_test(self, predator_pose, prey_name, prey_pose):
         prey_dist = []
 
+        pred_x, pred_y = self.actual_pose(predator_pose)
+
         for pose in prey_pose:
-            dist = math.sqrt(pow(pose.position.x - predator_pose.position.x, 2) + pow(pose.position.y - predator_pose.position.y, 2))
+            prey_x, prey_y = self.actual_pose(pose)
+            dist = math.sqrt(pow(prey_x - pred_x, 2) + pow(prey_y - pred_y, 2))
             prey_dist.append(dist)
 
         now = rospy.get_time()
         if now - self.last_dist_print > 1:
             self.last_dist_print = now
-            print(prey_dist)
 
         for i in range(len(prey_dist)):
-            if prey_dist[i] < 0.235:
+            # if prey_name[i] == 'alec_bot':
+            #     self.actual_pose(prey_pose[i], True)
+
+            if prey_dist[i] < 0.32:
                 # prey has been captured
                 print(f'Captured {prey_name[i]}')
                 self.reset()

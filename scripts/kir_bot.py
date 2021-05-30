@@ -38,11 +38,11 @@ class KirBot(Bot):
             "prey_weight": 1, # points straight towards nearest prey
             "parallel_weight": 0, # points parallel to nearest obstacle
             # "max_parallel_drive_scaled_weight": 0,
-            "away_weight": 0, # points straight away from nearest obstacle
+            "away_weight": .2, # points straight away from nearest obstacle
             # "explore_weight": 0, # vector pointing to unexplored areas based on odom
 
-            "min_turn_only_angle": 1.2,
-            "base_speed": 0.3,
+            "min_turn_only_angle": 0.4,
+            "base_speed": 0.1,
             "scaled_speed": 0, # scales with angle err (lower err = higher speed)
             "angle_adjust_rate": 0.5
         }
@@ -108,9 +108,9 @@ class KirBot(Bot):
 
         abs_err = abs(target_angle)
 
-        err_handling_speed = self.params["base_speed"] + self.params["scaled_speed"] / (abs_err + .0001)
+        err_handling_speed = self.params["base_speed"] * self.max_speed + self.params["scaled_speed"] / (abs_err + .0001)
         speed = min(self.max_speed, err_handling_speed)
-        if abs_err > self.params["min_turn_only_angle"]:
+        if abs_err > (self.params["min_turn_only_angle"] * 3):
             speed = 0
     
         angular_speed = target_angle * self.params["angle_adjust_rate"]
@@ -138,27 +138,50 @@ class KirBot(Bot):
 
         h, w, d = image.shape
 
-        lower_bounds = np.array([0, 121/2, 241/2]) 
-        upper_bounds = np.array([20, 180/2, 300/2])
-        rgb_lower = [np.asarray([lower_bounds[i],20, 20]) for i in range(3)]
-        rgb_upper = [np.asarray([upper_bounds[i],255, 255]) for i in range(3)]
+        # lower_bounds = np.array([0, 121/2, 241/2]) 
+        # upper_bounds = np.array([20, 180/2, 300/2])
+        # rgb_lower = [np.asarray([lower_bounds[i],20, 20]) for i in range(3)]
+        # rgb_upper = [np.asarray([upper_bounds[i],255, 255]) for i in range(3)]
+
+        lower_blue = np.array([235/2, 230, 230])
+        upper_blue = np.array([245/2, 255, 255])
+
+        lower_green = np.array([115/2, 230, 230])
+        upper_green = np.array([125/2, 255, 255])
+
+        lower_yellow = np.array([55/2, 230, 230])
+        upper_yellow = np.array([65/2, 255, 255])
         
-        mask = cv2.inRange(hsv, rgb_lower[2], rgb_upper[2])
+        lower_bounds = [lower_blue, lower_green, lower_yellow]
+        upper_bounds = [upper_blue, upper_green, upper_yellow]
 
-        M = cv2.moments(mask)
-        # if there are any colored pixels found
-        if M['m00'] > 0:
-                # center of the colored pixels in the image
-                cx = int(M['m10']/M['m00'])
-                cy = int(M['m01']/M['m00'])
+        best_err_to_approx_angle = None
 
-                err = (w / 2 - cx)
-                err_to_approx_angle =  err / w * math.pi * 0.5
-                self.prey_angle = err_to_approx_angle
-        else:
-            return
-            # # spin if the goal color is not visible
-            # self.set_v(0, .4)
+        for i in range(len(lower_bounds)):
+            lower = lower_bounds[i]
+            upper = upper_bounds[i]
+
+            mask = cv2.inRange(hsv, lower, upper)
+
+            M = cv2.moments(mask)
+            # if there are any colored pixels found
+            if M['m00'] > 0:
+                    # center of the colored pixels in the image
+                    cx = int(M['m10']/M['m00'])
+                    cy = int(M['m01']/M['m00'])
+
+                    err = (w / 2 - cx)
+                    err_to_approx_angle =  err / w * math.pi * 0.5
+                    if best_err_to_approx_angle is None or abs(err_to_approx_angle) < abs(best_err_to_approx_angle):
+                        best_err_to_approx_angle = err_to_approx_angle
+            else:
+                continue
+                # # spin if the goal color is not visible
+                # self.set_v(0, .4)
+
+        if best_err_to_approx_angle is not None:
+            self.prey_angle = best_err_to_approx_angle
+
 
     def run(self):
         if self.DEBUG:
