@@ -1,6 +1,7 @@
 import random
 import json
 import os
+import numpy as np
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -10,6 +11,20 @@ class GeneticAlgorithm(object):
         self.generation_size = 100
         self.generation_num = 0
         self.generation = []
+
+        self.n_crossover_mean = 200
+        self.n_crossover_swap = 200
+        self.n_mutation = 200
+
+        self.param_keys = [
+            "prey_weight",
+            "parallel_weight",
+            "away_weight",
+            "min_turn_only_angle",
+            "base_speed",
+            "scaled_speed",
+            "angle_adjust_rate"
+        ]
 
         if load:
             self.load(0)
@@ -60,7 +75,9 @@ class GeneticAlgorithm(object):
 
 
     def set_score_by_time(self, time):
-        return
+        time_param = 65
+        score = min(1, max(0, (time_param - time) / time_param))
+        self.set_score(score)
 
 
     def set_score(self, score):
@@ -83,12 +100,36 @@ class GeneticAlgorithm(object):
             v["score"] = v["score"] / scores_tot
 
 
+    def crossover_mean(self, v1, v2):
+        key = np.random.choice(self.param_keys)
+        p1 = v1["params"][key]
+        p2 = v2["params"][key]
+        avg = (p1 + p2) / 2
+        v1["params"][key] = avg
+        v2["params"][key] = avg
+
+
+    def crossover_swap(self, v1, v2):
+        key = np.random.choice(self.param_keys)
+        temp = v1["params"][key]
+        v1["params"][key] = v2["params"][key]
+        v2["params"][key] = temp
+
+
+    def n_mutation(self, v):
+        return
+
+
     def generate_next_generation(self):
         self.regularize_scores()
         self.save()
 
         self.generation_num += 1
         # randomly select based on scores, then do mutation and crossover
+        probs = list(map(lambda x: x["score"], self.generation))
+
+        next_generation = np.random.choice(self.generation, size=self.generation_size, p=probs)
+
         return
 
 
