@@ -19,7 +19,9 @@ class PredatorCatch(object):
         self.reset_world = reset_world
         self.last_reset_time = rospy.get_time()
 
-        # rospy.Subscriber("/gazebo/model_states", ModelStates, self.get_models, queue_size=1)
+        self.last_dist_print = rospy.get_time()
+
+        rospy.Subscriber("/gazebo/model_states", ModelStates, self.get_models, queue_size=1)
 
         rospy.wait_for_service('/gazebo/delete_model')
         self.delete_proxy = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
@@ -91,8 +93,13 @@ class PredatorCatch(object):
             dist = math.sqrt(pow(pose.position.x - predator_pose.position.x, 2) + pow(pose.position.y - predator_pose.position.y, 2))
             prey_dist.append(dist)
 
+        now = rospy.get_time()
+        if now - self.last_dist_print > 1:
+            self.last_dist_print = now
+            print(prey_dist)
+
         for i in range(len(prey_dist)):
-            if prey_dist[i] < 0.22:
+            if prey_dist[i] < 0.235:
                 # prey has been captured
                 print(f'Captured {prey_name[i]}')
                 self.reset()

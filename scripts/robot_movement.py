@@ -46,8 +46,12 @@ class RobotMovement(object):
         self.reset_gazebo_world = rospy.ServiceProxy('/gazebo/reset_world', Empty)
 
         rospy.wait_for_service('/gazebo/set_physics_properties')
-        set_physics_props = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
+        self.set_gazebo_physics_props = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
 
+        self.set_physics_props()
+
+
+    def set_physics_props(self):
         ode_config = ODEPhysics()
         ode_config.auto_disable_bodies = False
         ode_config.sor_pgs_precon_iters = 0
@@ -65,10 +69,11 @@ class RobotMovement(object):
         max_update_rate = 0.0
         if self.default_physics:
             max_update_rate = 1000.0
-        set_physics_props(time_step, max_update_rate, gravity, ode_config)
+        self.set_gazebo_physics_props(time_step, max_update_rate, gravity, ode_config)
 
 
     def reset_world(self):
+        # self.set_physics_props()
         self.reset_gazebo_world()
 
 
