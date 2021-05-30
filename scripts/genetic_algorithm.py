@@ -1,13 +1,15 @@
 import random
 import json
 import os
+import copy
 import numpy as np
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
 class GeneticAlgorithm(object):
 
-    def __init__(self, load=True):
+    def __init__(self, max_time, load=True):
+        self.max_time = max_time
         self.generation_size = 100
         self.generation_num = 0
         self.generation = []
@@ -36,15 +38,9 @@ class GeneticAlgorithm(object):
 
 
     def random_params(self):
-        params = {
-            "prey_weight": 1,
-            "parallel_weight": 0,
-            "away_weight": 0,
-            "min_turn_only_angle": 1.2,
-            "base_speed": 0.3,
-            "scaled_speed": 0,
-            "angle_adjust_rate": 0.5
-        }
+        params = {}
+        for key in self.param_keys:
+            params[key] = np.random.uniform()
         return params
 
 
@@ -61,6 +57,20 @@ class GeneticAlgorithm(object):
         self.save()
 
 
+    def count_tested(self):
+        c = 0
+        for v in self.generation:
+            if v["tested"]:
+                c += 1
+        return c
+
+
+    def print_progress(self):
+        tested = self.count_tested()
+        size = self.generation_size
+        print(f'Generation {self.generation_num} Progress: {tested}/{size}')
+
+
     def set_subject(self):
         for v in self.generation:
             if not v["tested"]:
@@ -75,7 +85,7 @@ class GeneticAlgorithm(object):
 
 
     def set_score_by_time(self, time):
-        time_param = 65
+        time_param = self.max_time * 1.03
         score = min(1, max(0, (time_param - time) / time_param))
         self.set_score(score)
 
@@ -116,8 +126,9 @@ class GeneticAlgorithm(object):
         v2["params"][key] = temp
 
 
-    def n_mutation(self, v):
-        return
+    def mutation(self, v):
+        key = np.random.choice(self.param_keys)
+        v["params"][key] += np.random.uniform(-.1, .1)
 
 
     def generate_next_generation(self):
@@ -128,9 +139,29 @@ class GeneticAlgorithm(object):
         # randomly select based on scores, then do mutation and crossover
         probs = list(map(lambda x: x["score"], self.generation))
 
-        next_generation = np.random.choice(self.generation, size=self.generation_size, p=probs)
+        next_generation = np.random.choice(self.generation, size=self.generation_size, p=probs).tolist()
 
-        return
+        for i in range(len(next_generation)):
+            next_generation[i] = copy.deepcopy(next_generation[i])
+            next_generation[i]["tested"] = False
+            next_generation[i]["score"] = 1 / self.generation_size
+
+        for i in range(self.n_crossover_mean):
+            v1 = np.random.choice(next_generation)
+            v2 = np.random.choice(next_generation)
+            self.crossover_mean(v1, v2)
+        
+        for i in range(self.n_crossover_swap):
+            v1 = np.random.choice(next_generation)
+            v2 = np.random.choice(next_generation)
+            self.crossover_swap(v1, v2)
+        
+        for i in range(self.n_mutation):
+            v = np.random.choice(next_generation)
+            self.mutation(v)
+
+        self.generation = next_generation
+        return next_generation
 
 
     def save(self):
@@ -154,3 +185,5 @@ if __name__ == '__main__':
     ga = GeneticAlgorithm(False)
     # ga.load(0)
     ga.init_and_save_generation()
+    # ga.generate_next_generation()
+    # ga.generate_next_generation()

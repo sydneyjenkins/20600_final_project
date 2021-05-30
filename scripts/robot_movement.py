@@ -11,6 +11,7 @@ from sydney_bot import SydneyBot
 from rachel_bot import RachelBot
 from kir_bot import KirBot
 from predator_catch import PredatorCatch
+from genetic_algorithm import GeneticAlgorithm
 
 class RobotMovement(object):
     def __init__(self):
@@ -19,6 +20,12 @@ class RobotMovement(object):
         rospy.init_node("robot_movement")
 
         self.default_physics = False
+        self.training = True
+        self.max_time = 30
+
+        self.genetic_algorithm = GeneticAlgorithm(self.max_time, load=True)
+        
+        self.kir_bot = None
 
         self.init_gazebo()
 
@@ -33,9 +40,11 @@ class RobotMovement(object):
         self.sydney_bot = SydneyBot(self.odom_positions)
         self.rachel_bot = RachelBot(self.odom_positions)
 
-        self.predator_catch = PredatorCatch(self.reset_world)
+        self.predator_catch = PredatorCatch(self.max_time, self.reset_world)
 
         self.kir_bot = KirBot(self.odom_positions, self.predator_catch.get_odom_poses)
+        if self.training:
+            self.kir_bot.params = self.genetic_algorithm.get_params()
 
         print("Initialized")
         self.initialized = True
@@ -65,7 +74,7 @@ class RobotMovement(object):
         ode_config.max_contacts = 20
         gravity = Vector3(0.0, 0.0, -9.8)
 
-        time_step = 0.0015
+        time_step = 0.001
         max_update_rate = 0.0
         if self.default_physics:
             time_step = 0.001
@@ -73,9 +82,18 @@ class RobotMovement(object):
         self.set_gazebo_physics_props(time_step, max_update_rate, gravity, ode_config)
 
 
-    def reset_world(self):
+    def reset_world(self, score_time=None):
         # self.set_physics_props()
         self.reset_gazebo_world()
+
+        if self.training:
+            if score_time is not None:
+                self.genetic_algorithm.set_score_by_time(score_time)
+
+            if self.kir_bot is not None:
+                self.kir_bot.params = self.genetic_algorithm.get_params()
+            
+            self.genetic_algorithm.print_progress()
 
 
     def run(self):

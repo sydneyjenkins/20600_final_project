@@ -11,7 +11,8 @@ import math
 
 class PredatorCatch(object):
 
-    def __init__(self, reset_world, DEBUG=False):
+    def __init__(self, max_time, reset_world, DEBUG=False):
+        self.max_time = max_time
         self.DEBUG = DEBUG
 
         if self.DEBUG:
@@ -21,6 +22,9 @@ class PredatorCatch(object):
         self.last_reset_time = rospy.get_time()
 
         self.last_dist_print = rospy.get_time()
+
+        self.prev_predator_pose = None
+        self.predator_travel_dists = []
 
         rospy.Subscriber("/gazebo/model_states", ModelStates, self.get_models, queue_size=1)
 
@@ -33,10 +37,50 @@ class PredatorCatch(object):
         time_diff = now - self.last_reset_time
         if time_diff < .5:
             return True
-        elif time_diff >= 60:
-            print('60s passed with no capture')
-            self.reset()
+        elif time_diff >= self.max_time:
+            print(f'{self.max_time}s passed with no capture')
+            self.reset(self.max_time)
             return True
+
+        return False
+
+
+    def clear_predator_poses(self):
+        now = rospy.get_time()
+        removed = False
+        while len(self.predator_travel_dists) > 0 and now - self.predator_travel_dists[0]["time"] > 3:
+            self.predator_travel_dists.pop(0)
+            removed = True
+
+        return removed
+
+
+    def predator_stuck(self, p1):
+        if self.prev_predator_pose is None:
+            self.prev_predator_pose = p1
+            return False
+        
+        p2 = self.prev_predator_pose
+        self.prev_predator_pose = p1
+        dist = math.sqrt(pow(p1.position.x - p2.position.x, 2) + pow(p1.position.y - p2.position.y, 2))
+        angle_change = abs(self.get_yaw_from_pose(p1) - self.get_yaw_from_pose(p2))
+
+        self.predator_travel_dists.append({
+            "time": rospy.get_time(),
+            "dist": dist,
+            "angle_change": angle_change
+        })
+        if self.clear_predator_poses():
+            tot_dist = 0
+            tot_angle_change = 0
+            for d in self.predator_travel_dists:
+                tot_dist += d["dist"]
+                tot_angle_change += d["angle_change"]
+
+            if tot_dist < 0.1 and tot_angle_change < 0.1:
+                print('Predator Stuck')
+                self.reset(self.max_time)
+                return True
 
         return False
 
@@ -112,6 +156,10 @@ class PredatorCatch(object):
 
 
     def handle_capture_test(self, predator_pose, prey_name, prey_pose):
+
+        if self.predator_stuck(predator_pose):
+            return
+
         prey_dist = []
 
         pred_x, pred_y = self.actual_pose(predator_pose)
@@ -132,12 +180,15 @@ class PredatorCatch(object):
             if prey_dist[i] < 0.32:
                 # prey has been captured
                 print(f'Captured {prey_name[i]}')
-                self.reset()
+                self.reset(rospy.get_time() - self.last_reset_time)
                 # self.delete_proxy(prey_name[i])
 
                 return
 
 
-    def reset(self):
+    def reset(self, score_time):
+        self.prev_predator_pose = None
+        self.predator_travel_dists = []
+
         self.last_reset_time = rospy.get_time()
-        self.reset_world()
+        self.reset_world(score_time)
