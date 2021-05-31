@@ -182,7 +182,7 @@ class GeneticAlgorithm(object):
             self.generation_num = data["generation_num"]
 
 if __name__ == '__main__':
-    ga = GeneticAlgorithm(False)
+    ga = GeneticAlgorithm(0, False)
     # ga.load(0)
     ga.init_and_save_generation()
     # ga.generate_next_generation()
