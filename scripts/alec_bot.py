@@ -4,6 +4,9 @@ import rospy, cv2, cv_bridge, numpy, math
 from sensor_msgs.msg import Image, LaserScan
 from geometry_msgs.msg import Twist, Vector3
 from bot import Bot
+import numpy as np
+
+distance = .3
 
 class AlecBot(Bot):
 
@@ -31,7 +34,10 @@ class AlecBot(Bot):
 
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
-
+        self.found_obstacle = False
+        self.approaching_obstacle = True
+        self.robot_circling = False
+        self.angle_searched = 0
         self.initialized = True
 
 
@@ -45,12 +51,80 @@ class AlecBot(Bot):
 
 
     def process_scan(self, data):
-        self.twist.angular.z = 0.2
-        self.cmd_vel_pub.publish(self.twist)
+        if not self.initialized:
+            return
+        min_angle = numpy.argmin(np.asarray(data.ranges))#.index(min(distances))
+        min_distance = data.ranges[min_angle]
+        if not self.found_obstacle:
+            if self.obstacle==9999:
+                turn = 90*3.14159265/180
+                self.angle_searched = self.angle_searched + 30
+                self.set_v(0,turn)
+                return 
+            elif self.obstacle>1:
+                turn = .005*self.obstacle
+                self.set_v(0,turn)
+                return 
+            else: 
+                self.found_obstacle = True
+                self.set_v(.2,0)
+                return
+        elif self.approaching_obstacle: 
+            if data.ranges[0] > distance: 
+                self.set_v(.2,0)  
+            elif not self.robot_circling and self.obstacle>1:
+                if self.obstacle == 9999: 
+                    turn = 90*3.14159265/180
+                    self.set_v(0,turn)
+                    return 
+                else:
+                    turn = .005*self.obstacle
+                    self.set_v(0,turn)
+                    return 
+            else: 
+                self.robot_circling = True
+                if min_angle < 267 and min_angle>90: 
+                    turn = -.008*(270 - min_angle) #-3*3.14159265/180
+                    self.set_v(0,turn)
+                elif min_angle>267 and min_angle<273: 
+                    err = min_angle - 270
+                    turn = .001*err
+                    self.set_v(0.3,0)#turn)
+                    self.following = True
+                elif min_angle>=273: 
+                    turn = .009*(min_angle - 270) #3*3.14159265/180
+                    self.set_v(0, turn)
+                else: 
+                    turn = .01*(min_angle + 90) #3*3.14159265/180
+                    self.set_v(0, turn)
         return
 
 
     def image_callback(self, data):
+        # converts the incoming ROS message to cv2 format and HSV (hue, saturation, value)
+        image = self.bridge.imgmsg_to_cv2(data,desired_encoding='bgr8')
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        lower_orange = numpy.array([ 10, 100, 20])
+        upper_orange = numpy.array([25, 255, 255])
+        mask_orange = cv2.inRange(hsv, lower_orange, upper_orange)
+
+        h, w, d = image.shape
+
+        # using moments() function, the center of the colored pixels is determined
+        M = cv2.moments(mask_orange)
+        # if there are any colored pixels found
+        if M['m00'] > 0:
+                # center of the colored pixels in the image
+                cx = int(M['m10']/M['m00'])
+                cy = int(M['m01']/M['m00'])
+
+                err = w/2 - cx
+                if err < 2:
+                    self.obstacle = err
+                    return
+
+        self.obstacle = 9999
         return
 
 
