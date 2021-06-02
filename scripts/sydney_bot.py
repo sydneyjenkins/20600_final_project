@@ -223,6 +223,12 @@ class SydneyBot(Bot):
             #rospy.sleep(4)
         return 
 
+    def restart_bot(self):
+        self.found_wall = False
+        self.concave_turn = False
+        self.obstacle = 9999
+        self.following = False
+        return
 
     def run(self):
         if self.DEBUG:

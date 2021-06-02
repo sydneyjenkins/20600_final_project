@@ -94,6 +94,13 @@ class RobotMovement(object):
                 self.kir_bot.params = self.genetic_algorithm.get_params()
             
             self.genetic_algorithm.print_progress()
+            
+        try:
+            self.sydney_bot.restart_bot()
+            self.alec_bot.restart_bot()
+        except: 
+            #self.bots not yet initialized
+            pass
 
 
     def run(self):

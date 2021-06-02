@@ -37,6 +37,8 @@ class AlecBot(Bot):
         self.found_obstacle = False
         self.approaching_obstacle = True
         self.robot_circling = False
+        self.robot_turning = False
+        self.obstacle = 9999
         self.angle_searched = 0
         self.initialized = True
 
@@ -61,8 +63,8 @@ class AlecBot(Bot):
                 self.angle_searched = self.angle_searched + 30
                 self.set_v(0,turn)
                 return 
-            elif self.obstacle>1:
-                turn = .005*self.obstacle
+            elif np.abs(self.obstacle)>5:
+                turn = .003*self.obstacle
                 self.set_v(0,turn)
                 return 
             else: 
@@ -70,9 +72,9 @@ class AlecBot(Bot):
                 self.set_v(.2,0)
                 return
         elif self.approaching_obstacle: 
-            if data.ranges[0] > distance: 
+            if not self.robot_turning and not self.robot_circling and data.ranges[0] > distance+.1: 
                 self.set_v(.2,0)  
-            elif not self.robot_circling and self.obstacle>1:
+            elif not self.robot_turning and not self.robot_circling and self.obstacle>1:
                 if self.obstacle == 9999: 
                     turn = 90*3.14159265/180
                     self.set_v(0,turn)
@@ -81,22 +83,32 @@ class AlecBot(Bot):
                     turn = .005*self.obstacle
                     self.set_v(0,turn)
                     return 
+            elif not self.robot_circling and min_angle<90:
+                self.robot_turning = True
+                turn = .01*(min_angle + 90) #3*3.14159265/180
+                self.set_v(0, turn)
+                return
+            elif not self.robot_circling and min_angle>280:
+                self.robot_turning = True
+                turn = .01*(min_angle-250)
+                self.set_v(0,turn)
             else: 
                 self.robot_circling = True
-                if min_angle < 267 and min_angle>90: 
-                    turn = -.008*(270 - min_angle) #-3*3.14159265/180
-                    self.set_v(0,turn)
-                elif min_angle>267 and min_angle<273: 
+                if data.ranges[267]<data.ranges[270]: #min_angle < 267 and min_angle>90: 
+                    turn = -.09*(270 - min_angle) #-3*3.14159265/180
+                    self.set_v(0.05,turn)
+                elif data.ranges[273]<data.ranges[270]:#min_angle>=273: 
+                    turn = .09*(min_angle - 270) #3*3.14159265/180
+                    self.set_v(0.05, turn)
+                else: #if min_angle>267 and min_angle<273: 
                     err = min_angle - 270
-                    turn = .001*err
-                    self.set_v(0.3,0)#turn)
+                    turn = .009*err
+                    self.set_v(0.08,turn)#turn)
                     self.following = True
-                elif min_angle>=273: 
-                    turn = .009*(min_angle - 270) #3*3.14159265/180
-                    self.set_v(0, turn)
-                else: 
-                    turn = .01*(min_angle + 90) #3*3.14159265/180
-                    self.set_v(0, turn)
+                
+                #else: 
+                #    turn = .01*(min_angle + 90) #3*3.14159265/180
+                #    self.set_v(0, turn)
         return
 
 
@@ -127,6 +139,13 @@ class AlecBot(Bot):
         self.obstacle = 9999
         return
 
+    def restart_bot(self):
+        self.found_obstacle = False
+        self.approaching_obstacle = True
+        self.robot_circling = False
+        self.robot_turning = False
+        self.obstacle = 9999
+        self.angle_searched = 0
 
     def run(self):
         if self.DEBUG:
