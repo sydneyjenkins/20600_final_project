@@ -99,7 +99,7 @@ class SydneyBot(Bot):
                     #print("not found wall")
                     if self.obstacle < 9999: 
                         #print("1")
-                        turn = -.005*self.obstacle
+                        turn = .2
                         self.set_v(0.2,turn)
                     elif min_distance < distance and min_angle>10 and min_angle<350: 
                         #print("2", min_distance, min_angle)
@@ -127,22 +127,27 @@ class SydneyBot(Bot):
                         if min_angle>268 and min_angle < 275: 
                             self.concave_turn = False
                             #print("DONE TURNING")
+                        elif self.turn_count > 50:
+                            self.found_wall = False
+                            self.concave_turn = False
+                            self.following = False
                         else: 
-                            #print("TURNING")
                             distance_in_range = data.ranges[200:300]
 
                             # Turn left at
-                            turn = -40*3.14159265/180
-                            self.set_v(0, turn)
-                    elif self.following and data.ranges[0] <= distance+.1:
+                            turn = -60*3.14159265/180
+                            self.set_v(0.1, turn)
+                            self.turn_count = self.turn_count+1
+                    elif self.obstacle==9999 and self.following and data.ranges[0] <= distance+.1:
                         # Turn left
-                        print("sees inner corner")
+                        #print("sees inner corner")
                         turn = 30*3.14159265/180
                         self.set_v(0.05, turn)
                         rospy.sleep(1)
-                    elif self.following and data.ranges[280] > distance+.4:
+                    elif self.following and data.ranges[275] > distance+.4:
                         # prepare for convex turn 
                         self.concave_turn = True
+                        self.turn_count = 0
                     else: 
                         # go straight
                         #print("going straight")
@@ -157,11 +162,15 @@ class SydneyBot(Bot):
                             turn = -.02*(270 - min_angle) #-3*3.14159265/180
                             self.set_v(0,turn)
                         elif min_angle>267 and min_angle<275: 
-                            #print("m2")
-                            err = min_angle - 270
-                            turn = .001*err
-                            self.set_v(0.3,0)#turn)
-                            self.following = True
+                            if data.ranges[270]>.2:
+                                turn = -.02*(3) #-3*3.14159265/180
+                                self.set_v(0.3,turn)
+                                #print("m2")
+                            else: 
+                                err = min_angle - 270
+                                turn = .001*err
+                                self.set_v(0.3,0)#turn)
+                                self.following = True
                         elif min_angle>=275: 
                         # If angle between robot and wall too large, adjust
                             #self.twist.linear.x = 0.
