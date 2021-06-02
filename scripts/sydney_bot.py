@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist, Vector3
 from bot import Bot
 
 # How close we will get to wall.
-distance = .5
+distance = .4
 
 class SydneyBot(Bot):
 
@@ -133,14 +133,14 @@ class SydneyBot(Bot):
 
                             # Turn left at
                             turn = -40*3.14159265/180
-                            self.set_v(.15, turn)
-                    elif self.following and data.ranges[0] <= distance:
+                            self.set_v(0, turn)
+                    elif self.following and data.ranges[0] <= distance+.1:
                         # Turn left
-                        #print("sees inner corner")
+                        print("sees inner corner")
                         turn = 30*3.14159265/180
-                        self.set_v(0, turn)
+                        self.set_v(0.05, turn)
                         rospy.sleep(1)
-                    elif self.following and data.ranges[270] > distance+.5:
+                    elif self.following and data.ranges[280] > distance+.4:
                         # prepare for convex turn 
                         self.concave_turn = True
                     else: 
@@ -154,19 +154,19 @@ class SydneyBot(Bot):
                             #if True: #while(current_angle < 5):
                                 #t1 = rospy.Time.now().to_sec()
                                 #current_angle = 5*3.14159625/180*(t1-t0)
-                            turn = -.008*(270 - min_angle) #-3*3.14159265/180
+                            turn = -.02*(270 - min_angle) #-3*3.14159265/180
                             self.set_v(0,turn)
-                        elif min_angle>267 and min_angle<273: 
+                        elif min_angle>267 and min_angle<275: 
                             #print("m2")
                             err = min_angle - 270
                             turn = .001*err
                             self.set_v(0.3,0)#turn)
                             self.following = True
-                        elif min_angle>=273: 
+                        elif min_angle>=275: 
                         # If angle between robot and wall too large, adjust
                             #self.twist.linear.x = 0.
                             #print("m3")
-                            turn = .009*(min_angle - 270) #3*3.14159265/180
+                            turn = .006*(min_angle - 270) #3*3.14159265/180
                             self.set_v(0, turn)
                         else: 
                             #print("m4")
