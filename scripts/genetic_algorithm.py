@@ -31,7 +31,7 @@ class GeneticAlgorithm(object):
 
         if load:
             self.load(0)
-            self.set_subject()
+            self.choose_next()
 
 
     def get_filename(self, generation_num):
@@ -91,13 +91,19 @@ class GeneticAlgorithm(object):
         self.set_score(score)
 
 
+    def choose_next(self):
+        if not self.set_subject():
+            self.generate_next_generation()
+            self.set_subject()
+
+
     def set_score(self, score):
         self.subject["score"] = score
         self.subject["tested"] = True
 
-        if not self.set_subject():
-            self.generate_next_generation()
-            self.set_subject()
+        self.save()
+
+        self.choose_next()
 
 
     def regularize_scores(self):

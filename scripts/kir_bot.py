@@ -180,7 +180,7 @@ class KirBot(Bot):
             # if there are any colored pixels found
             if M['m00'] > 0:
                     pixel_percent = (mask>0).mean()
-                    self.pixel_percent = min(1, max(pixel_percent, self.pixel_percent))
+                    self.pixel_percent = min(1, max(math.pow(pixel_percent, .25), self.pixel_percent))
                     # center of the colored pixels in the image
                     cx = int(M['m10']/M['m00'])
                     cy = int(M['m01']/M['m00'])
