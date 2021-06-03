@@ -23,10 +23,10 @@ class AlecBot(Bot):
 
         # subscribe to the robot's RGB camera data stream
         self.image_sub = rospy.Subscriber(f'/{self.name}/camera/rgb/image_raw',
-                Image, self.image_callback)
+                Image, self.image_callback, queue_size=10)
 
         # subscribe to the robot's scan topic
-        rospy.Subscriber(f"/{self.name}/scan", LaserScan, self.process_scan)
+        rospy.Subscriber(f"/{self.name}/scan", LaserScan, self.process_scan, queue_size=10)
 
         # set up publisher and Twist to publish to /cmd_vel
         self.cmd_vel_pub = rospy.Publisher(f'/{self.name}/cmd_vel', Twist, queue_size=10)

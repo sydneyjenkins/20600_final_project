@@ -19,9 +19,9 @@ class RobotMovement(object):
 
         rospy.init_node("robot_movement")
 
-        self.default_physics = True
-        self.training = False
-        self.disable_capture = True
+        self.default_physics = False
+        self.training = True
+        self.disable_capture = False
         self.max_time = 30
 
         if self.training:
@@ -37,7 +37,7 @@ class RobotMovement(object):
                             [0, -1, 0],
                             [0, -2, 0],
                             [0, -3, 0],
-                            [0, -4, 0]
+                            [0, -4, 0],
                             [1, 0, 0],
                             [1, -1, 0],
                             [1, -3, 0],

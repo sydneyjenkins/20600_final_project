@@ -20,10 +20,10 @@ class KirBot(Bot):
 
         # subscribe to the robot's RGB camera data stream
         self.image_sub = rospy.Subscriber('/kir_bot/camera/rgb/image_raw',
-                Image, self.image_callback)
+                Image, self.image_callback, queue_size=10)
 
         # subscribe to the robot's scan topic
-        rospy.Subscriber("/kir_bot/scan", LaserScan, self.process_scan)
+        rospy.Subscriber("/kir_bot/scan", LaserScan, self.process_scan, queue_size=10)
 
         # set up publisher and Twist to publish to /cmd_vel
         self.cmd_vel_pub = rospy.Publisher('/kir_bot/cmd_vel', Twist, queue_size=10)
@@ -32,7 +32,7 @@ class KirBot(Bot):
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
 
-        self.max_speed = 3
+        self.max_speed = 2
 
         self.params = {
             "prey_weight": 1, # points straight towards nearest prey
@@ -42,7 +42,7 @@ class KirBot(Bot):
             # "explore_weight": 0, # vector pointing to unexplored areas based on odom
 
             "min_turn_only_angle": 0.4,
-            "base_speed": 0.1,
+            "base_speed": 0.15,
             "scaled_speed": 0, # scales with angle err (lower err = higher speed)
             "angle_adjust_rate": 0.5
         }

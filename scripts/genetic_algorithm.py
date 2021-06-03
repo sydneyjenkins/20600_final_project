@@ -10,13 +10,13 @@ class GeneticAlgorithm(object):
 
     def __init__(self, max_time, load=True):
         self.max_time = max_time
-        self.generation_size = 100
+        self.generation_size = 200
         self.generation_num = 0
         self.generation = []
 
-        self.n_crossover_mean = 200
-        self.n_crossover_swap = 200
-        self.n_mutation = 200
+        self.n_crossover_mean = self.generation_size * 2
+        self.n_crossover_swap = self.generation_size * 2
+        self.n_mutation = self.generation_size * 2
 
         self.param_keys = [
             "prey_weight",
