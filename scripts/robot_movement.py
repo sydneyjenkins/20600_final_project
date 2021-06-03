@@ -19,11 +19,13 @@ class RobotMovement(object):
 
         rospy.init_node("robot_movement")
 
-        self.default_physics = False
-        self.training = True
+        self.default_physics = True
+        self.training = False
+        self.disable_capture = True
         self.max_time = 30
 
-        self.genetic_algorithm = GeneticAlgorithm(self.max_time, load=True)
+        if self.training:
+            self.genetic_algorithm = GeneticAlgorithm(self.max_time, load=True)
         
         self.kir_bot = None
 
@@ -51,9 +53,13 @@ class RobotMovement(object):
         self.sydney_bot = SydneyBot(self.odom_positions)
         self.rachel_bot = RachelBot(self.odom_positions)
 
-        self.predator_catch = PredatorCatch(self.max_time, self.reset_world)
+        if self.disable_capture:
+            odom_pose_callback = lambda x: x
+        else:
+            self.predator_catch = PredatorCatch(self.max_time, self.reset_world)
+            odom_pose_callback = self.predator_catch.get_odom_poses
 
-        self.kir_bot = KirBot(self.odom_positions, self.predator_catch.get_odom_poses)
+        self.kir_bot = KirBot(self.odom_positions, odom_pose_callback)
         if self.training:
             self.kir_bot.params = self.genetic_algorithm.get_params()
 

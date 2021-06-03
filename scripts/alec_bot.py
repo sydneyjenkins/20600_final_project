@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist, Vector3
 from bot import Bot
 import numpy as np
 
-distance = .3
+distance = .2
 
 class AlecBot(Bot):
 
@@ -63,7 +63,7 @@ class AlecBot(Bot):
                 self.angle_searched = self.angle_searched + 30
                 self.set_v(0,turn)
                 return 
-            elif np.abs(self.obstacle)>5:
+            elif np.abs(self.obstacle)>3:
                 turn = .003*self.obstacle
                 self.set_v(0,turn)
                 return 
@@ -94,16 +94,26 @@ class AlecBot(Bot):
                 self.set_v(0,turn)
             else: 
                 self.robot_circling = True
-                if data.ranges[267]<data.ranges[270]: #min_angle < 267 and min_angle>90: 
-                    turn = -.09*(270 - min_angle) #-3*3.14159265/180
-                    self.set_v(0.05,turn)
-                elif data.ranges[273]<data.ranges[270]:#min_angle>=273: 
-                    turn = .09*(min_angle - 270) #3*3.14159265/180
-                    self.set_v(0.05, turn)
+                if min_angle<15 or min_angle>345:
+                    self.set_v(0.,.5)
+                elif data.ranges[266]<data.ranges[270]: #min_angle < 267 and min_angle>90: 
+                    if data.ranges[270]>distance:
+                        turn = -.3
+                        self.set_v(0.03,turn)
+                    else:
+                        turn = -.15*(270 - min_angle) #-3*3.14159265/180
+                        self.set_v(0.03,turn)
+                elif data.ranges[274]<data.ranges[270]:#min_angle>=273: 
+                    if data.ranges[270]>distance:
+                        turn = .01*(min_angle - 270) #3*3.14159265/180
+                        self.set_v(0.03, turn)
+                    else:
+                        turn = .05*(min_angle - 270) #3*3.14159265/180
+                        self.set_v(0.03, turn)
                 else: #if min_angle>267 and min_angle<273: 
                     err = min_angle - 270
-                    turn = .009*err
-                    self.set_v(0.08,turn)#turn)
+                    turn = .005*err
+                    self.set_v(0.05,turn)#turn)
                     self.following = True
                 
                 #else: 
