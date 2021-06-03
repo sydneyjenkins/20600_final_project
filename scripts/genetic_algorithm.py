@@ -159,8 +159,8 @@ class GeneticAlgorithm(object):
 
 
     def generate_next_generation(self):
-        self.regularize_scores()
         self.save()
+        self.regularize_scores()
 
         self.generation_num += 1
         # randomly select based on scores, then do mutation and crossover
