@@ -29,16 +29,25 @@ class RobotMovement(object):
         
         self.kir_bot = None
 
-        self.spawn_locs = numpy.array([[0, 0, 0],
+        self.spawn_locs = numpy.array(
+                            [[-2, 0, 0],
+                            [-2, 1, 0],
+                            [-1, 0, 0],
+                            [0, 0, 0],
                             [0, -1, 0],
                             [0, -2, 0],
                             [0, -3, 0],
+                            [0, -4, 0]
                             [1, 0, 0],
                             [1, -1, 0],
                             [1, -3, 0],
                             [2, 0, 0],
                             [2, -1, 0],
-                            [2, -2, 0]])
+                            [2, -2, 0],
+                            [3, 1, 0],
+                            [4, 1, 0],
+                            [3, -1, 0],
+                            [3, -3, 0]])
 
         self.init_gazebo()
 
