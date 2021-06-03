@@ -32,7 +32,7 @@ class KirBot(Bot):
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
 
-        self.max_speed = 0.5
+        self.max_speed = 0.75
 
         self.params = {
             "prey_weight": 1, # points straight towards nearest prey
@@ -44,8 +44,8 @@ class KirBot(Bot):
             "prey_only_pixel_percent": 0.01,
 
             "min_turn_only_angle": 0.4,
-            "base_speed": 1,
-            "scaled_speed": 0, # scales with angle err (lower err = higher speed)
+            "base_speed": 0.5,
+            "scaled_speed": 0.5, # scales with angle err (lower err = higher speed)
             "angle_adjust_rate": 0.4
         }
 
@@ -124,8 +124,6 @@ class KirBot(Bot):
 
         if total_weight == 0:
             total_weight = 0.0001
-        
-        print(total_weight)
 
         if use_prey:
             target_angle = self.prey_angle * (self.params["prey_weight"] / total_weight)
