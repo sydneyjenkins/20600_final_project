@@ -26,6 +26,8 @@ class PredatorCatch(object):
         self.prev_predator_pose = None
         self.predator_travel_dists = []
 
+        self.min_capture_time = 8
+
         rospy.Subscriber("/gazebo/model_states", ModelStates, self.get_models, queue_size=1)
 
         rospy.wait_for_service('/gazebo/delete_model')
@@ -180,7 +182,8 @@ class PredatorCatch(object):
             if prey_dist[i] < 0.32:
                 # prey has been captured
                 print(f'Captured {prey_name[i]}')
-                self.reset(rospy.get_time() - self.last_reset_time)
+                capture_diff = rospy.get_time() - self.last_reset_time
+                self.reset(math.max(self.min_capture_time, capture_diff))
                 # self.delete_proxy(prey_name[i])
 
                 return

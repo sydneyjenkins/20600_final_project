@@ -10,7 +10,7 @@ class GeneticAlgorithm(object):
 
     def __init__(self, max_time, load=True):
         self.max_time = max_time
-        self.generation_size = 200
+        self.generation_size = 100
         self.generation_num = 0
         self.generation = []
 
@@ -181,9 +181,17 @@ class GeneticAlgorithm(object):
             self.generation = data["generation"]
             self.generation_num = data["generation_num"]
 
+    def modify_gen(self):
+        for v in self.generation:
+            v["tested"] = False
+        self.generation = self.generation[:100]
+
 if __name__ == '__main__':
     ga = GeneticAlgorithm(0, False)
-    # ga.load(0)
-    ga.init_and_save_generation()
+    ga.load(0)
+    # ga.modify_gen()
+    # ga.save()
+
+    # ga.init_and_save_generation()
     # ga.generate_next_generation()
     # ga.generate_next_generation()
