@@ -29,26 +29,6 @@ class RobotMovement(object):
         
         self.kir_bot = None
 
-        self.spawn_locs = numpy.array(
-                            [[-2, 0, 0],
-                            [-2, 1, 0],
-                            [-1, 0, 0],
-                            [0, 0, 0],
-                            [0, -1, 0],
-                            [0, -2, 0],
-                            [0, -3, 0],
-                            [0, -4, 0],
-                            [1, 0, 0],
-                            [1, -1, 0],
-                            [1, -3, 0],
-                            [2, 0, 0],
-                            [2, -1, 0],
-                            [2, -2, 0],
-                            [3, 1, 0],
-                            [4, 1, 0],
-                            [3, -1, 0],
-                            [3, -3, 0]])
-
         self.init_gazebo()
 
         rospy.sleep(2)
@@ -111,13 +91,15 @@ class RobotMovement(object):
         self.set_gazebo_physics_props(time_step, max_update_rate, gravity, ode_config)
 
 
-    def reset_world(self, score_time=None):
+    def reset_world(self, captured=None):
         # self.set_physics_props()
         self.reset_gazebo_world()
 
         if self.training:
-            if score_time is not None:
-                self.genetic_algorithm.set_score_by_time(score_time)
+            # if score_time is not None:
+                # self.genetic_algorithm.set_score_by_time(score_time)
+            if captured is not None:
+                self.genetic_algorithm.set_score_by_capture(captured)
 
             if self.kir_bot is not None:
                 self.kir_bot.params = self.genetic_algorithm.get_params()
@@ -163,24 +145,57 @@ class RobotMovement(object):
         alec_pose.orientation.z = 0
         alec_pose.orientation.w = 0
         alec_state.model_name = 'alec_bot'
-        
-        spawn_index = numpy.random.choice(self.spawn_locs.shape[0], 4, False)
 
-        kir_pose.position.x = self.spawn_locs[spawn_index[0]][0]
-        kir_pose.position.y = self.spawn_locs[spawn_index[0]][1]
-        kir_pose.position.z = self.spawn_locs[spawn_index[0]][2]
+        spawn_locs = numpy.array(
+            [[-2, 0, 0],
+            [-2, 1, 0],
+            [-1, 0, 0],
+            [0, 0, 0],
+            [0, -1, 0],
+            [0, -2, 0],
+            [0, -3, 0],
+            [0, -4, 0],
+            [1, 0, 0],
+            [1, -1, 0],
+            [1, -3, 0],
+            [2, 0, 0],
+            [2, -1, 0],
+            [2, -2, 0],
+            [3, 1, 0],
+            [4, 1, 0],
+            [3, -1, 0],
+            [3, -3, 0]])
 
-        rachel_pose.position.x = self.spawn_locs[spawn_index[1]][0]
-        rachel_pose.position.y = self.spawn_locs[spawn_index[1]][1]
-        rachel_pose.position.z = self.spawn_locs[spawn_index[1]][2]
+        predator_spawn_index = numpy.random.choice(spawn_locs.shape[0])
+        predator_spawn = spawn_locs[predator_spawn_index]
+        spawn_locs = numpy.delete(spawn_locs, predator_spawn_index, axis=0)
 
-        sydney_pose.position.x = self.spawn_locs[spawn_index[2]][0]
-        sydney_pose.position.y = self.spawn_locs[spawn_index[2]][1]
-        sydney_pose.position.z = self.spawn_locs[spawn_index[2]][2]
+        remove_indices = numpy.array([])
+        for i in range(spawn_locs.shape[0]):
+            spawn_loc = spawn_locs[i]
+            if spawn_loc[1] == predator_spawn[1] and spawn_loc[0] > predator_spawn[0]:
+                remove_indices = numpy.append(remove_indices, i)
 
-        alec_pose.position.x = self.spawn_locs[spawn_index[3]][0]
-        alec_pose.position.y = self.spawn_locs[spawn_index[3]][1]
-        alec_pose.position.z = self.spawn_locs[spawn_index[3]][2]
+        if remove_indices.shape[0] > 0:
+            spawn_locs = numpy.delete(spawn_locs, remove_indices.astype(int), axis=0)
+
+        spawn_index = numpy.random.choice(spawn_locs.shape[0], 3, False)
+
+        kir_pose.position.x = predator_spawn[0]
+        kir_pose.position.y = predator_spawn[1]
+        kir_pose.position.z = predator_spawn[2]
+
+        rachel_pose.position.x = spawn_locs[spawn_index[0]][0]
+        rachel_pose.position.y = spawn_locs[spawn_index[0]][1]
+        rachel_pose.position.z = spawn_locs[spawn_index[0]][2]
+
+        sydney_pose.position.x = spawn_locs[spawn_index[1]][0]
+        sydney_pose.position.y = spawn_locs[spawn_index[1]][1]
+        sydney_pose.position.z = spawn_locs[spawn_index[1]][2]
+
+        alec_pose.position.x = spawn_locs[spawn_index[2]][0]
+        alec_pose.position.y = spawn_locs[spawn_index[2]][1]
+        alec_pose.position.z = spawn_locs[spawn_index[2]][2]
 
         kir_state.pose = kir_pose
         rachel_state.pose = rachel_pose

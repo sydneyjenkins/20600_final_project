@@ -10,7 +10,7 @@ class GeneticAlgorithm(object):
 
     def __init__(self, max_time, load=True):
         self.max_time = max_time
-        self.generation_size = 200
+        self.generation_size = 100
         self.generation_num = 0
         self.generation = []
 
@@ -32,6 +32,9 @@ class GeneticAlgorithm(object):
         if load:
             self.load(0)
             self.choose_next()
+        
+        self.try_count = 0
+        self.capture_count = 0
 
 
     def get_filename(self, generation_num):
@@ -85,6 +88,18 @@ class GeneticAlgorithm(object):
         return self.subject["params"]
 
 
+    def set_score_by_capture(self, captured):
+        self.try_count += 1
+        if captured:
+            self.capture_count += 1
+        
+        if self.try_count == 3:
+            if self.capture_count == 0:
+                self.set_score(0.05)
+            else:
+                self.set_score(self.capture_count / self.try_count)
+
+
     def set_score_by_time(self, time):
         time_param = self.max_time * 1.03
         score = min(1, max(0, (time_param - time) / time_param))
@@ -92,6 +107,9 @@ class GeneticAlgorithm(object):
 
 
     def choose_next(self):
+        self.try_count = 0
+        self.capture_count = 0
+
         if not self.set_subject():
             self.generate_next_generation()
             self.set_subject()
@@ -100,6 +118,8 @@ class GeneticAlgorithm(object):
     def set_score(self, score):
         self.subject["score"] = score
         self.subject["tested"] = True
+
+        print(f'Score: {score}')
 
         self.save()
 

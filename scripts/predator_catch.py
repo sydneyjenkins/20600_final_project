@@ -41,7 +41,7 @@ class PredatorCatch(object):
             return True
         elif time_diff >= self.max_time:
             print(f'{self.max_time}s passed with no capture')
-            self.reset(self.max_time)
+            self.reset(False)
             return True
 
         return False
@@ -81,7 +81,7 @@ class PredatorCatch(object):
 
             if tot_dist < 0.1 and tot_angle_change < 0.1:
                 print('Predator Stuck')
-                self.reset(self.max_time)
+                self.reset(False)
                 return True
 
         return False
@@ -183,15 +183,16 @@ class PredatorCatch(object):
                 # prey has been captured
                 print(f'Captured {prey_name[i]}')
                 capture_diff = rospy.get_time() - self.last_reset_time
-                self.reset(max(self.min_capture_time, capture_diff))
+                # self.reset(max(self.min_capture_time, capture_diff))
+                self.reset(True)
                 # self.delete_proxy(prey_name[i])
 
                 return
 
 
-    def reset(self, score_time):
+    def reset(self, captured):
         self.prev_predator_pose = None
         self.predator_travel_dists = []
 
         self.last_reset_time = rospy.get_time()
-        self.reset_world(score_time)
+        self.reset_world(captured)

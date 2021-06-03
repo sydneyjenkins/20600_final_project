@@ -32,26 +32,27 @@ class KirBot(Bot):
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
 
-        self.max_speed = 2
+        self.max_speed = 0.5
 
         self.params = {
             "prey_weight": 1, # points straight towards nearest prey
-            "parallel_weight": 0, # points parallel to nearest obstacle
+            "parallel_weight": .4, # points parallel to nearest obstacle
             # "max_parallel_drive_scaled_weight": 0,
-            "away_weight": .2, # points straight away from nearest obstacle
+            "away_weight": .8, # points straight away from nearest obstacle
             # "explore_weight": 0, # vector pointing to unexplored areas based on odom
 
-            "prey_only_pixel_percent": 0.5,
+            "prey_only_pixel_percent": 0.01,
 
             "min_turn_only_angle": 0.4,
-            "base_speed": 0.15,
+            "base_speed": 1,
             "scaled_speed": 0, # scales with angle err (lower err = higher speed)
-            "angle_adjust_rate": 0.5
+            "angle_adjust_rate": 0.4
         }
 
         self.away_angle = 0
         self.parallel_angle = 0
         self.prey_angle = 0
+        self.prey_in_frame = False
         self.pixel_percent = 0
 
         self.initialized = True
@@ -106,14 +107,30 @@ class KirBot(Bot):
         self.move_robot()
 
     def move_robot(self):
-        target_angle = self.prey_angle * self.params["prey_weight"]
-        use_other_weights = True
+        target_angle = 0
 
-        if self.pixel_percent > self.params["prey_only_pixel_percent"]:
+        # the multiplied weights always need to add up to 1
+
+        total_weight = 0
+        use_prey = self.prey_in_frame
+        use_other_weights = True
+        if self.pixel_percent >= self.params["prey_only_pixel_percent"]:
             use_other_weights = False
 
+        if use_prey:
+            total_weight += self.params["prey_weight"]
         if use_other_weights:
-            target_angle += self.away_angle * self.params["away_weight"] + self.parallel_angle * self.params["parallel_weight"]
+            total_weight += self.params["away_weight"] + self.params["parallel_weight"]
+
+        if total_weight == 0:
+            total_weight = 0.0001
+        
+        print(total_weight)
+
+        if use_prey:
+            target_angle = self.prey_angle * (self.params["prey_weight"] / total_weight)
+        if use_other_weights:
+            target_angle += self.away_angle * (self.params["away_weight"] / total_weight) + self.parallel_angle * (self.params["parallel_weight"]  / total_weight)
 
         target_angle = self.normalize_radian_angle(target_angle)
 
@@ -123,7 +140,7 @@ class KirBot(Bot):
         speed = min(self.max_speed, err_handling_speed)
         if abs_err > (self.params["min_turn_only_angle"] * 3):
             speed = 0
-    
+
         angular_speed = target_angle * self.params["angle_adjust_rate"]
         self.set_v(speed, angular_speed)
 
@@ -142,7 +159,8 @@ class KirBot(Bot):
         if not self.initialized:
             return
         
-        self.prey_angle = math.pi * 0.5
+        self.prey_angle = 0
+        self.prey_in_frame = False
 
         image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -196,6 +214,7 @@ class KirBot(Bot):
 
         if best_err_to_approx_angle is not None:
             self.prey_angle = best_err_to_approx_angle
+            self.prey_in_frame = True
 
 
     def run(self):
