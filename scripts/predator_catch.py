@@ -183,7 +183,7 @@ class PredatorCatch(object):
                 # prey has been captured
                 print(f'Captured {prey_name[i]}')
                 capture_diff = rospy.get_time() - self.last_reset_time
-                self.reset(math.max(self.min_capture_time, capture_diff))
+                self.reset(max(self.min_capture_time, capture_diff))
                 # self.delete_proxy(prey_name[i])
 
                 return

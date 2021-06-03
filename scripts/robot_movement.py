@@ -29,28 +29,25 @@ class RobotMovement(object):
         
         self.kir_bot = None
 
-        self.predator_spawn_loc = [-2, 1, 0]
-
         self.spawn_locs = numpy.array(
-                            [
-                                # [-2, 0, 0],
-                                [-1, 0, 0],
-                                [0, 0, 0],
-                                [0, -1, 0],
-                                [0, -2, 0],
-                                [0, -3, 0],
-                                [0, -4, 0],
-                                [1, 0, 0],
-                                [1, -1, 0],
-                                [1, -3, 0],
-                                [2, 0, 0],
-                                [2, -1, 0],
-                                [2, -2, 0],
-                                [3, 1, 0],
-                                [4, 1, 0],
-                                [3, -1, 0],
-                                [3, -3, 0]
-                            ])
+                            [[-2, 0, 0],
+                            [-2, 1, 0],
+                            [-1, 0, 0],
+                            [0, 0, 0],
+                            [0, -1, 0],
+                            [0, -2, 0],
+                            [0, -3, 0],
+                            [0, -4, 0],
+                            [1, 0, 0],
+                            [1, -1, 0],
+                            [1, -3, 0],
+                            [2, 0, 0],
+                            [2, -1, 0],
+                            [2, -2, 0],
+                            [3, 1, 0],
+                            [4, 1, 0],
+                            [3, -1, 0],
+                            [3, -3, 0]])
 
         self.init_gazebo()
 
@@ -169,9 +166,9 @@ class RobotMovement(object):
         
         spawn_index = numpy.random.choice(self.spawn_locs.shape[0], 4, False)
 
-        kir_pose.position.x = self.predator_spawn_loc[0]
-        kir_pose.position.y = self.predator_spawn_loc[1]
-        kir_pose.position.z = self.predator_spawn_loc[2]
+        kir_pose.position.x = self.spawn_locs[spawn_index[0]][0]
+        kir_pose.position.y = self.spawn_locs[spawn_index[0]][1]
+        kir_pose.position.z = self.spawn_locs[spawn_index[0]][2]
 
         rachel_pose.position.x = self.spawn_locs[spawn_index[1]][0]
         rachel_pose.position.y = self.spawn_locs[spawn_index[1]][1]

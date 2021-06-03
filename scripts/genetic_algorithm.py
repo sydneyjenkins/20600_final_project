@@ -10,7 +10,7 @@ class GeneticAlgorithm(object):
 
     def __init__(self, max_time, load=True):
         self.max_time = max_time
-        self.generation_size = 100
+        self.generation_size = 200
         self.generation_num = 0
         self.generation = []
 
@@ -22,6 +22,7 @@ class GeneticAlgorithm(object):
             "prey_weight",
             "parallel_weight",
             "away_weight",
+            "prey_only_pixel_percent",
             "min_turn_only_angle",
             "base_speed",
             "scaled_speed",
@@ -188,10 +189,10 @@ class GeneticAlgorithm(object):
 
 if __name__ == '__main__':
     ga = GeneticAlgorithm(0, False)
-    ga.load(0)
+    # ga.load(0)
     # ga.modify_gen()
     # ga.save()
 
-    # ga.init_and_save_generation()
+    ga.init_and_save_generation()
     # ga.generate_next_generation()
     # ga.generate_next_generation()

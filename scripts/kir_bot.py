@@ -41,6 +41,8 @@ class KirBot(Bot):
             "away_weight": .2, # points straight away from nearest obstacle
             # "explore_weight": 0, # vector pointing to unexplored areas based on odom
 
+            "prey_only_pixel_percent": 0.5,
+
             "min_turn_only_angle": 0.4,
             "base_speed": 0.15,
             "scaled_speed": 0, # scales with angle err (lower err = higher speed)
@@ -50,6 +52,7 @@ class KirBot(Bot):
         self.away_angle = 0
         self.parallel_angle = 0
         self.prey_angle = 0
+        self.pixel_percent = 0
 
         self.initialized = True
 
@@ -103,7 +106,15 @@ class KirBot(Bot):
         self.move_robot()
 
     def move_robot(self):
-        target_angle = self.prey_angle * self.params["prey_weight"] + self.away_angle * self.params["away_weight"] + self.parallel_angle * self.params["parallel_weight"]
+        target_angle = self.prey_angle * self.params["prey_weight"]
+        use_other_weights = True
+
+        if self.pixel_percent > self.params["prey_only_pixel_percent"]:
+            use_other_weights = False
+
+        if use_other_weights:
+            target_angle += self.away_angle * self.params["away_weight"] + self.parallel_angle * self.params["parallel_weight"]
+
         target_angle = self.normalize_radian_angle(target_angle)
 
         abs_err = abs(target_angle)
@@ -157,6 +168,8 @@ class KirBot(Bot):
 
         best_err_to_approx_angle = None
 
+        self.pixel_percent = 0
+
         for i in range(len(lower_bounds)):
             lower = lower_bounds[i]
             upper = upper_bounds[i]
@@ -166,6 +179,8 @@ class KirBot(Bot):
             M = cv2.moments(mask)
             # if there are any colored pixels found
             if M['m00'] > 0:
+                    pixel_percent = (mask>0).mean()
+                    self.pixel_percent = min(1, max(pixel_percent, self.pixel_percent))
                     # center of the colored pixels in the image
                     cx = int(M['m10']/M['m00'])
                     cy = int(M['m01']/M['m00'])
