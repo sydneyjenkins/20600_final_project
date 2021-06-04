@@ -14,8 +14,11 @@ class GeneticAlgorithm(object):
     def __init__(self, max_time, load=True):
         self.max_time = max_time
         self.generation_size = 100
-        self.generation_num = 4
+        self.generation_num = 10
         self.generation = []
+
+        # used to test only the best out of a generation for our final results
+        self.test_best = False
 
         self.n_crossover_mean = self.generation_size * 2
         self.n_crossover_swap = self.generation_size * 2
@@ -35,8 +38,15 @@ class GeneticAlgorithm(object):
 
         if load:
             self.load(self.generation_num)
+            if self.test_best:
+                self.reduce_to_best()
+
             self.choose_next()
         
+        self.required_tries = 3
+        if self.test_best:
+            self.required_tries = 10
+
         self.try_count = 0
         self.capture_count = 0
 
@@ -101,8 +111,8 @@ class GeneticAlgorithm(object):
         self.try_count += 1
         if captured:
             self.capture_count += 1
-        
-        if self.try_count == 3:
+
+        if self.try_count == self.required_tries:
             if self.capture_count == 0:
                 self.set_score(0.05)
             else:
@@ -122,6 +132,9 @@ class GeneticAlgorithm(object):
         self.capture_count = 0
 
         if not self.set_subject():
+            if self.test_best:
+                exit()
+
             self.generate_next_generation()
             self.set_subject()
 
@@ -206,6 +219,10 @@ class GeneticAlgorithm(object):
 
 
     def save(self):
+        # we don't want to save anything when testing the best params
+        if self.test_best:
+            return
+
         filename = self.get_filename(self.generation_num)
         full_data = {
             "generation": self.generation,
@@ -238,7 +255,17 @@ class GeneticAlgorithm(object):
                 tot += score
         
         return tot / self.generation_size
-        
+    
+
+    def reduce_to_best(self):
+        new_generation = []
+        for v in self.generation:
+            v["tested"] = False
+            if v["score"] > 0.9:
+                new_generation.append(v)
+        self.generation = new_generation
+        self.generation_size = len(self.generation)
+
 
 if __name__ == '__main__':
     ga = GeneticAlgorithm(0, False)

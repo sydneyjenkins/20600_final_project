@@ -20,7 +20,8 @@ class RobotMovement(object):
         rospy.init_node("robot_movement")
 
         self.default_physics = False
-        self.training = True
+        # set this to True to run training
+        self.training = False
         self.disable_capture = False
         self.max_time = 30
 

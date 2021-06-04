@@ -38,20 +38,20 @@ class KirBot(Bot):
         # max speed allowed for predator so it does not just fly around really fast
         self.max_speed = 0.75
 
-        # sample param configuration, training overrides this
+        # these param values are the best we found from Generation 9 of training
         self.params = {
-            "prey_weight": 1, # weight for nearest prey direction
-            "parallel_weight": .4, # weight for driving parallel to nearest obstacle
-            "away_weight": .8, # weight for driving directly away from nearest obstacle
-            
+            "prey_weight": 0.7517077082714122, # weight for nearest prey direction
+            "parallel_weight": 0.2961151492829175, # weight for driving parallel to nearest obstacle
+            "away_weight": 0.6355636459871135, # weight for driving directly away from nearest obstacle
+
             # percentage prey-colored pixels that will force the predator to focus entirely on prey
-            "prey_only_pixel_percent": 0.01,
+            "prey_only_pixel_percent": 0.23153207282550584,
 
             # minimum target angle at which predator should only turn without driving
-            "min_turn_only_angle": 0.4,
-            "base_speed": 0.5, # base drive speed without error scaling
-            "scaled_speed": 0.5, # scales with angle err (lower err = higher speed)
-            "angle_adjust_rate": 0.4 # rate to adjust angle based on error from target angle
+            "min_turn_only_angle": 0.3421713209284353,
+            "base_speed": 0.5319568772282512, # base drive speed without error scaling
+            "scaled_speed": 0.45962266127799195, # scales with angle err (lower err = higher speed)
+            "angle_adjust_rate": 0.7144854185349765 # rate to adjust angle based on error from target angle
         }
 
         self.away_angle = 0
