@@ -2,6 +2,8 @@
 
 Team: Kir Nagaitsev, Rachel Wang, Sydney Jenkins, Alec Blagg
 
+Demo: https://youtu.be/IbbQhGGPak8
+
 ## Project Description
 
 
