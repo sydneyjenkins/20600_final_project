@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from genetic_algorithm import GeneticAlgorithm
 
-generation_count = 7
+generation_count = 10
 
 xs = range(generation_count)
 
