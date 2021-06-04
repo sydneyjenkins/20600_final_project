@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from genetic_algorithm import GeneticAlgorithm
 
-generation_count = 4
+generation_count = 5
 
 xs = range(generation_count)
 
@@ -12,6 +12,7 @@ for i in xs:
     ga.load(i)
     ys.append(ga.avg_capture_rate())
 
+# make a plot of average capture rate for generations
 plt.plot(xs, ys, color='red', linestyle='-')
 
 plt.title("Average capture rate of each generation")

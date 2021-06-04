@@ -7,6 +7,9 @@ import numpy as np
 from bot import Bot
 
 class KirBot(Bot):
+    """ This is the predator robot. It has params that the genetic algorithm can set
+    in order to test a new predator configuration.
+    """
 
     def __init__(self, odom_positions, handle_odom_positions, DEBUG=False):
         super().__init__("kir_bot", odom_positions, handle_odom_positions)
@@ -32,21 +35,23 @@ class KirBot(Bot):
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
 
+        # max speed allowed for predator so it does not just fly around really fast
         self.max_speed = 0.75
 
+        # sample param configuration, training overrides this
         self.params = {
-            "prey_weight": 1, # points straight towards nearest prey
-            "parallel_weight": .4, # points parallel to nearest obstacle
-            # "max_parallel_drive_scaled_weight": 0,
-            "away_weight": .8, # points straight away from nearest obstacle
-            # "explore_weight": 0, # vector pointing to unexplored areas based on odom
-
+            "prey_weight": 1, # weight for nearest prey direction
+            "parallel_weight": .4, # weight for driving parallel to nearest obstacle
+            "away_weight": .8, # weight for driving directly away from nearest obstacle
+            
+            # percentage prey-colored pixels that will force the predator to focus entirely on prey
             "prey_only_pixel_percent": 0.01,
 
+            # minimum target angle at which predator should only turn without driving
             "min_turn_only_angle": 0.4,
-            "base_speed": 0.5,
+            "base_speed": 0.5, # base drive speed without error scaling
             "scaled_speed": 0.5, # scales with angle err (lower err = higher speed)
-            "angle_adjust_rate": 0.4
+            "angle_adjust_rate": 0.4 # rate to adjust angle based on error from target angle
         }
 
         self.away_angle = 0
@@ -70,8 +75,6 @@ class KirBot(Bot):
     def process_scan(self, data):
         if not self.initialized:
             return
-        # self.twist.angular.z = 0.5
-        # self.cmd_vel_pub.publish(self.twist)
 
         min_dist = None
         min_dist_index = None
@@ -84,6 +87,8 @@ class KirBot(Bot):
                 min_dist = dist
                 min_dist_index = i
 
+        # determine here what what angle relative to the robot's forward would be needed
+        # to go directly away and parallel to the nearest obstacle
         away_angle = 0
         parallel_angle = 0
 
@@ -107,6 +112,9 @@ class KirBot(Bot):
         self.move_robot()
 
     def move_robot(self):
+        """ This is where all the predator params come into play to determine how the
+        predator should move
+        """
         target_angle = 0
 
         # the multiplied weights always need to add up to 1
@@ -125,6 +133,7 @@ class KirBot(Bot):
         if total_weight == 0:
             total_weight = 0.0001
 
+        # calculate the target angle using the various weight params
         if use_prey:
             target_angle = self.prey_angle * (self.params["prey_weight"] / total_weight)
         if use_other_weights:
@@ -134,6 +143,7 @@ class KirBot(Bot):
 
         abs_err = abs(target_angle)
 
+        # use navigation params to get the robot in the direction it desires
         err_handling_speed = self.params["base_speed"] * self.max_speed + self.params["scaled_speed"] / (abs_err + .0001)
         speed = min(self.max_speed, err_handling_speed)
         if abs_err > (self.params["min_turn_only_angle"] * 3):
@@ -154,6 +164,10 @@ class KirBot(Bot):
         return math.radians(self.normalize_degree_angle(math.degrees(angle)))
 
     def image_callback(self, msg):
+        """ Use this image callback to determine the most centered prey and the percentage
+        of the image that this prey occupies as a way of determining approximately how
+        close the prey is to the predator.
+        """
         if not self.initialized:
             return
         
@@ -165,11 +179,7 @@ class KirBot(Bot):
 
         h, w, d = image.shape
 
-        # lower_bounds = np.array([0, 121/2, 241/2]) 
-        # upper_bounds = np.array([20, 180/2, 300/2])
-        # rgb_lower = [np.asarray([lower_bounds[i],20, 20]) for i in range(3)]
-        # rgb_upper = [np.asarray([upper_bounds[i],255, 255]) for i in range(3)]
-
+        # colors of prey we want to search for
         lower_blue = np.array([235/2, 230, 230])
         upper_blue = np.array([245/2, 255, 255])
 
@@ -207,8 +217,6 @@ class KirBot(Bot):
                         best_err_to_approx_angle = err_to_approx_angle
             else:
                 continue
-                # # spin if the goal color is not visible
-                # self.set_v(0, .4)
 
         if best_err_to_approx_angle is not None:
             self.prey_angle = best_err_to_approx_angle

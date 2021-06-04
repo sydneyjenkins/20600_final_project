@@ -7,17 +7,21 @@ import numpy as np
 file_path = os.path.dirname(os.path.abspath(__file__))
 
 class GeneticAlgorithm(object):
+    """ Genetic algorithm framework that handles robot params, full generations,
+    saving, crossover/mutations, and fitness function calculation.
+    """
 
     def __init__(self, max_time, load=True):
         self.max_time = max_time
         self.generation_size = 100
-        self.generation_num = 2
+        self.generation_num = 4
         self.generation = []
 
         self.n_crossover_mean = self.generation_size * 2
         self.n_crossover_swap = self.generation_size * 2
         self.n_mutation = self.generation_size * 2
 
+        # all the predator params
         self.param_keys = [
             "prey_weight",
             "parallel_weight",
@@ -49,7 +53,8 @@ class GeneticAlgorithm(object):
 
 
     def init_and_save_generation(self):
-
+        """ Saves a randomly generated generation to start out
+        """
         for i in range(self.generation_size):
             v = {
                 "params": self.random_params(),
@@ -76,6 +81,8 @@ class GeneticAlgorithm(object):
 
 
     def set_subject(self):
+        """ The 'subject' is the current parameter set that we are testing for the predator
+        """
         for v in self.generation:
             if not v["tested"]:
                 self.subject = v
@@ -89,6 +96,8 @@ class GeneticAlgorithm(object):
 
 
     def set_score_by_capture(self, captured):
+        """ Fitness function to set the score of predator params
+        """
         self.try_count += 1
         if captured:
             self.capture_count += 1
@@ -107,6 +116,8 @@ class GeneticAlgorithm(object):
 
 
     def choose_next(self):
+        """ Choose the next subject and reset the try counter for determining fitness
+        """
         self.try_count = 0
         self.capture_count = 0
 
@@ -159,6 +170,9 @@ class GeneticAlgorithm(object):
 
 
     def generate_next_generation(self):
+        """ Create the next generation using the current, doing copying, picking new gen
+        based on scores from fitness function, then doing crossover/mutation
+        """
         self.save()
         self.regularize_scores()
 
@@ -208,10 +222,13 @@ class GeneticAlgorithm(object):
             self.generation = data["generation"]
             self.generation_num = data["generation_num"]
 
+
     def modify_gen(self):
+        # simple helper made to reduce generation size to 100 from 200
         for v in self.generation:
             v["tested"] = False
         self.generation = self.generation[:100]
+
 
     def avg_capture_rate(self):
         tot = 0
