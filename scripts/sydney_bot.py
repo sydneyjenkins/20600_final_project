@@ -27,7 +27,7 @@ class SydneyBot(Bot):
                 Image, self.use_color_data, queue_size=10)
 
         # subscribe to the robot's scan topic
-        rospy.Subscriber(f"/{self.name}/scan", LaserScan, self.image_callback, queue_size=10)
+        rospy.Subscriber(f"/{self.name}/scan", LaserScan, self.callback, queue_size=10)
         # set up publisher and Twist to publish to /cmd_vel
         self.cmd_vel_pub = rospy.Publisher(f'/{self.name}/cmd_vel', Twist, queue_size=10)
         self.twist = Twist()
@@ -35,6 +35,7 @@ class SydneyBot(Bot):
         # set up ROS / cv bridge
         self.bridge = cv_bridge.CvBridge()
 
+        # initialize variables used for movement
         self.found_wall = False
         self.concave_turn = False
         self.obstacle = 9999
@@ -53,19 +54,20 @@ class SydneyBot(Bot):
 
 
     def process_scan(self, data):
+        """ Spinning behavior used for testing
+        """
         self.twist.linear.x = -0.1
         self.cmd_vel_pub.publish(self.twist)
         return
 
     def use_color_data(self, data):
+        """ Determine if there is obstacle ahead
+        """
         # converts the incoming ROS message to cv2 format and HSV (hue, saturation, value)
         image = self.bridge.imgmsg_to_cv2(data,desired_encoding='bgr8')
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        lower_color = numpy.array([ 0, 10, 0])
-        upper_color = numpy.array([255, 255, 255])
-        mask = cv2.inRange(hsv, lower_color, upper_color)
-
+        # identify orange
         lower_orange = numpy.array([ 10, 100, 20])
         upper_orange = numpy.array([25, 255, 255])
         mask_orange = cv2.inRange(hsv, lower_orange, upper_orange)
@@ -85,154 +87,108 @@ class SydneyBot(Bot):
                     self.obstacle = err
                     return
 
+        # if no obstacle, set variable to some fake value
         self.obstacle = 9999
         return
 
-    def image_callback(self, data):
+    def callback(self, data):
+            """ Move robot to wall and begin followingit
+            """
             if not self.initialized:
                 return
-            #angle_count = 0
-            #min_angle = numpy.argmin(data.ranges)
             min_angle = numpy.argmin(np.asarray(data.ranges))#.index(min(distances))
             min_distance = data.ranges[min_angle]
-            if not self.found_wall:# and (min_distance != 0 or self.obstacle<9999):
-                #print("not found wall")
+
+            # check if we have found the wall yet
+            if not self.found_wall:
                 if self.obstacle < 9999: 
-                    #print("1")
+                    # If there is an obstacle ahead, modify orientation slightly to avoid it
                     turn = .2
                     self.set_v(0.2,turn)
                 elif min_distance < distance and min_angle>10 and min_angle<350: 
-                    #print("2", min_distance, min_angle)
+                    # if there is a wall, but it's at the wrong angle, re-orient
                     diff = min_angle-180
                     diff_abs = np.abs(np.abs(diff)-180)/180
                     turn = .5*diff_abs if diff<0 else -.5*diff
-                    #print(diff_abs, turn)
                     self.set_v(0.0,turn)
                 elif min_distance < distance: 
-                    #print("3")
+                    # if wall directly ahead, then stop
                     self.set_v(0,0)
                     self.found_wall = True 
                 else: 
-                    #print("4")
+                    # Move forward in search of wall
                     self.set_v(0.2,0)
-                '''if min_distance != 0:
-                    self.turn_to_wall(min_distance)
-                else:
-                    distances[min_distance] = 9999
-                    min_distance = distances.index(min(distances))
-                    self.turn_to_wall(min_distance)'''
                 return 
             else:
                 if self.following and self.concave_turn:
+                    # If it is time to turn an outer corner
                     if min_angle>268 and min_angle < 275: 
+                        # If wall is again to the right, then turn is complete
                         self.concave_turn = False
-                        #print("DONE TURNING")
                     elif self.turn_count > 50:
+                        # if robot keeps turning, something went wrong, search for wall again
                         self.found_wall = False
                         self.concave_turn = False
                         self.following = False
                     else: 
+                        # Turn at outer corner
                         distance_in_range = data.ranges[200:300]
-
-                        # Turn left at
                         turn = -60*3.14159265/180
                         self.set_v(0.1, turn)
                         self.turn_count = self.turn_count+1
                 elif self.obstacle==9999 and self.following and data.ranges[0] <= distance+.1:
-                    # Turn left
-                    #print("sees inner corner")
+                    # Turn inner corner
                     turn = 30*3.14159265/180
                     self.set_v(0.05, turn)
                     rospy.sleep(1)
                 elif self.following and data.ranges[275] > distance+.4:
-                    # prepare for convex turn 
+                    # prepare for outer turn 
                     self.concave_turn = True
                     self.turn_count = 0
                 else: 
                     # go straight
-                    #print("going straight")
                     if min_angle < 267 and min_angle>90: 
-                        #print("m1")
-                    # If angle between robot and wall too small, adjust
-                        #self.twist.linear.x = 0.
-                        #current_angle = 0 
-                        #if True: #while(current_angle < 5):
-                            #t1 = rospy.Time.now().to_sec()
-                            #current_angle = 5*3.14159625/180*(t1-t0)
+                        # If angle between robot and wall too small, adjust
                         turn = -.02*(270 - min_angle) #-3*3.14159265/180
                         self.set_v(0,turn)
                     elif min_angle>267 and min_angle<275: 
+                        # Angle is pretty good
                         if data.ranges[270]>.2:
+                            # If robot is too far from wall, get closer
                             turn = -.02*(3) #-3*3.14159265/180
                             self.set_v(0.3,turn)
-                            #print("m2")
                         else: 
+                            # Keep going straight
                             err = min_angle - 270
                             turn = .001*err
                             self.set_v(0.3,0)#turn)
                             self.following = True
                     elif min_angle>=275: 
-                    # If angle between robot and wall too large, adjust
-                        #self.twist.linear.x = 0.
-                        #print("m3")
+                        # If angle between robot and wall too large, adjust
                         turn = .006*(min_angle - 270) #3*3.14159265/180
                         self.set_v(0, turn)
                     else: 
-                        #print("m4")
+                        # If angle is very off, make larger tur
                         turn = .01*(min_angle + 90) #3*3.14159265/180
                         self.set_v(0, turn)
-
-                        #self.set_v(0.2,0)
-                # If nearest wall was not actually an obstacle or robot
-                # go towards it 
-                '''if not self.found_wall:
-                        if data.ranges[0] >= distance:
-                                # Move forward toward wall
-                                self.set_v(0.2,0) 
-                        else: 
-                                # At wall, turn left 
-                                ang = -90*3.14159265/180
-                                self.set_v(0, ang)
-                                rospy.sleep(1)
-                                self.found_wall = True
-                else:
-                        if self.concave_turn:
-                                # Turn left at
-                                ang = 90*3.14159265/180
-                                self.set_v(0, ang)
-                                rospy.sleep(1)
-                                self.concave_turn = False
-                        if data.ranges[0] <= distance:
-                                # Turn left
-                                ang = -90*3.14159265/180
-                                self.set_v(0, ang)
-                                rospy.sleep(1)
-                        elif data.ranges[270] > distance+.5:
-                                # prepare for convex turn 
-                                self.set_v(0.2,0)
-                                rospy.sleep(1)
-                                self.concave_turn = True
-                        else: 
-                                self.set_v(0.2,0)'''
             return
                         
     def turn_to_wall(self, min_distance):
+        """Makes robot turn to wall, used in older version
+        """
         if min_distance < 3: 
             ang = min_distance*90*3.14159265/180
-            #print("ANG:",ang)
             self.set_v(0, ang)
-            #rospy.sleep(1)
             self.set_v(0,0)
-            #rospy.sleep(4)
         else: 
             ang = -90*3.14159265/180
             self.set_v(0, ang)
-            #rospy.sleep(1)
             self.set_v(0,0)
-            #rospy.sleep(4)
         return 
 
     def restart_bot(self):
+        """ re-initialize variables for re-setting world
+        """
         self.found_wall = False
         self.concave_turn = False
         self.obstacle = 9999
