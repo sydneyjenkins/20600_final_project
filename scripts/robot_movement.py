@@ -166,6 +166,10 @@ class RobotMovement(object):
             [3, -1, 0],
             [3, -3, 0]])
 
+        # this selects a predator spawn location from the full list of spawn locations,
+        # then limits the prey spawn locations such that it is not extremely easy for the
+        # predator to capture the prey (specifically it prevents prey from spawning directly
+        # in front of the predator)
         predator_spawn_index = numpy.random.choice(spawn_locs.shape[0])
         predator_spawn = spawn_locs[predator_spawn_index]
         spawn_locs = numpy.delete(spawn_locs, predator_spawn_index, axis=0)
