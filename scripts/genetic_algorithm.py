@@ -11,7 +11,7 @@ class GeneticAlgorithm(object):
     def __init__(self, max_time, load=True):
         self.max_time = max_time
         self.generation_size = 100
-        self.generation_num = 0
+        self.generation_num = 2
         self.generation = []
 
         self.n_crossover_mean = self.generation_size * 2
@@ -30,7 +30,7 @@ class GeneticAlgorithm(object):
         ]
 
         if load:
-            self.load(0)
+            self.load(self.generation_num)
             self.choose_next()
         
         self.try_count = 0
@@ -212,6 +212,16 @@ class GeneticAlgorithm(object):
         for v in self.generation:
             v["tested"] = False
         self.generation = self.generation[:100]
+
+    def avg_capture_rate(self):
+        tot = 0
+        for v in self.generation:
+            score = v["score"]
+            if score != .05:
+                tot += score
+        
+        return tot / self.generation_size
+        
 
 if __name__ == '__main__':
     ga = GeneticAlgorithm(0, False)
